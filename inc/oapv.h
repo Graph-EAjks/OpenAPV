@@ -59,6 +59,13 @@ extern "C" {
 #define OAPV_BLK_H                      (1 << OAPV_LOG2_BLK)
 #define OAPV_BLK_D                      (OAPV_BLK_W * OAPV_BLK_H)
 
+/* size of tile */
+#define OAPV_MAX_TILE_ROWS              (20)
+#define OAPV_MAX_TILE_COLS              (20)
+#define OAPV_MAX_TILES                  (OAPV_MAX_TILE_ROWS * OAPV_MAX_TILE_COLS)
+#define OAPV_MIN_TILE_W_MB              (16)
+#define OAPV_MIN_TILE_H_MB              (8)
+
 /* maximum number of thread */
 #define OAPV_MAX_THREADS                (32)
 

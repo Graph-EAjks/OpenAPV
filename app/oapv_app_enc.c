@@ -545,6 +545,25 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
         param->preset = OAPV_PRESET_DEFAULT;
     }
 
+    /* update tile */
+    if (param->tile_w_mb < OAPV_MIN_TILE_W_MB) {
+        param->tile_w_mb = OAPV_MIN_TILE_W_MB;
+    }
+    if (param->tile_h_mb < OAPV_MIN_TILE_H_MB) {
+        param->tile_h_mb = OAPV_MIN_TILE_H_MB;
+    }
+
+    int tile_w = param->tile_w_mb << OAPV_LOG2_MB_W;
+    int tile_h = param->tile_h_mb << OAPV_LOG2_MB_H;
+    int tile_cols = (param->w + tile_w - 1) / tile_w;
+    int tile_rows = (param->h + tile_h - 1) / tile_h;
+    if (tile_cols > OAPV_MAX_TILE_COLS) {
+        param->tile_w_mb = (((param->w + OAPV_MB_W - 1) >> OAPV_LOG2_MB_W) + OAPV_MAX_TILE_COLS - 1) / OAPV_MAX_TILE_COLS;
+    }
+    if (tile_rows > OAPV_MAX_TILE_ROWS) {
+        param->tile_h_mb = (((param->h + OAPV_MB_H - 1) >> OAPV_LOG2_MB_H) + OAPV_MAX_TILE_ROWS - 1) / OAPV_MAX_TILE_ROWS;
+    }
+
     return 0;
 }
 

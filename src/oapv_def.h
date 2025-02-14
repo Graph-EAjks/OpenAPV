@@ -68,11 +68,6 @@
 #define OAPV_MIN_AC_LEVEL_CTX     0
 #define OAPV_MAX_AC_LEVEL_CTX     4
 
-/* need to check */
-#define OAPV_MAX_TILE_ROWS        20
-#define OAPV_MAX_TILE_COLS        20
-#define OAPV_MAX_TILES            (OAPV_MAX_TILE_ROWS * OAPV_MAX_TILE_COLS)
-
 /* Maximum transform dynamic range (excluding sign bit) */
 #define MAX_TX_DYNAMIC_RANGE      15
 #define MAX_TX_VAL                ((1 << MAX_TX_DYNAMIC_RANGE) - 1)
