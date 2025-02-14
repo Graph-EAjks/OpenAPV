@@ -97,7 +97,7 @@ jobs:
 
       - name: Build (crosscmopile) PC Windows version of openAPV, generate packages and md5 file
         run: |
-          cmake -S ${{github.workspace}} -B ${{github.workspace}}/build-windows -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}windows_x86_64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake -S ${{github.workspace}} -B ${{github.workspace}}/build-windows -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/windows_x86_64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build ${{github.workspace}}/build-windows
           cd ${{github.workspace}}/build-windows
           cpack -G ZIP -C Release

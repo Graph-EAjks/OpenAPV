@@ -46,7 +46,7 @@ jobs:
 
       - name: Build (crosscmopile) PC Windows
         run: |
-          cmake -S ${{github.workspace}} -B ${{github.workspace}}/build-windows -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}windows_x86_64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake -S ${{github.workspace}} -B ${{github.workspace}}/build-windows -DCMAKE_TOOLCHAIN_FILE=${{github.workspace}}/windows_x86_64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build ${{github.workspace}}/build-windows
 
   build-arm:
