@@ -79,7 +79,9 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         'q',  "qp", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "QP value (0~51)"
+        "QP value: 0 ~ (63 + (bitdepth - 10)*6) \n"
+        "      - 10bit input: 0 ~ 63\n"
+        "      - 12bit input: 0 ~ 75\n"
     },
     {
         'z',  "fps", ARGS_VAL_TYPE_STRING | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
@@ -95,7 +97,8 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         'd',  "input-depth", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "input bit depth (8, 10) "
+        "input bit depth (8, 10-12)\n"
+        "      - Note: 8bit input will be converted to 10bit"
     },
     {
         ARGS_NO_KEY,  "input-csp", ARGS_VAL_TYPE_INTEGER, 0, NULL,
@@ -127,12 +130,16 @@ static const args_opt_t enc_args_opts[] = {
         "number of skipped access units before encoding"
     },
     {
-        ARGS_NO_KEY,  "qp-cb-offset", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "QP offset value for Cb"
+        ARGS_NO_KEY,  "qp-offset-c1", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        "QP offset value for Component 1 (Cb)"
     },
     {
-        ARGS_NO_KEY,  "qp-cr-offset", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "QP offset value for Cr"
+        ARGS_NO_KEY,  "qp-offset-c2", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        "QP offset value for Component 2 (Cr)"
+    },
+    {
+        ARGS_NO_KEY,  "qp-offset-c3", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        "QP offset value for Component 3"
     },
     {
         ARGS_NO_KEY,  "tile-w-mb", ARGS_VAL_TYPE_INTEGER, 0, NULL,
@@ -253,8 +260,9 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, use_filler);
     ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, tile_w_mb);
     ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, tile_h_mb);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_cb_offset);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_cr_offset);
+    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c1);
+    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c2);
+    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c3);
 
     return vars;
 }

@@ -390,12 +390,17 @@ struct oapve_param {
     int           fps_den;
     /* rate control type */
     int           rc_type;
-    /* quantization parameter (0 ~ 63)*/
-    int           qp;
-    /* quantization parameter offset for CB */
-    int           qp_cb_offset;
-    /* quantization parameter offset for CR */
-    int           qp_cr_offset;
+    /* quantization parameters : 0 ~ (63 + (bitdepth - 10)*6)
+       - 10bit input: 0 ~ 63
+       - 12bit input: 0 ~ 75
+    */
+    unsigned char qp;
+    /* quantization parameter offsets */
+    signed char   qp_offset_c1;
+    /* quantization parameter offsets */
+    signed char   qp_offset_c2;
+    /* quantization parameter offsets */
+    signed char   qp_offset_c3;
     /* bitrate (unit: kbps) */
     int           bitrate;
     /* use filler data for tight constant bitrate */

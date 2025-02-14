@@ -51,7 +51,7 @@
 #define OAPVD_MAGIC_CODE          0x41503144 /* AP1D */
 
 /* Max. and min. Quantization parameter */
-#define MAX_QUANT                 63
+#define MAX_QUANT(BD)             (63 + ((BD-10)*6))
 #define MIN_QUANT                 0
 
 #define MAX_COST                  (1.7e+308) /* maximum cost value */
@@ -280,6 +280,7 @@ struct oapve_ctx {
     int                       num_tile_cols;
     int                       num_tile_rows;
     int                       qp[N_C];
+    s8                        qp_offset[N_C];
     int                       w;
     int                       h;
     int                       cfi;
