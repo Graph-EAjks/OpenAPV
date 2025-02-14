@@ -25,10 +25,13 @@ The sample entry with APV1SampleEntry type specifies that the track contains APV
 
 
 ### Syntax
+~~~~
 
 class APV1SampleEntry extends VisualSampleEntry('apv1'){
 	APVCodecConfigurationBox	config;
 }
+
+~~~~
 
 ### Semantics
 
@@ -52,15 +55,29 @@ The compressorname field of the VisualSampleEntry shall have '\012APV Coding'. T
 
 ### Description
 
-The box with APVCodecConfigurationBox shall contains information for initial configuration of a decoder which consumes the samples references the sample entry type of apv1.
-
-All variation of information required to decide appropriate resource for decoding, e.g. the profiles a decoder compliant to, are carried so that the client can decide whether it has appropriate resources to completely decode the AUs in that track.
-
+The box with APVCodecConfigurationBox shall contains APVDecoderConfigurationRecord as defined in {{APVDecoderConfigurationRecord}}
 
 ### Syntax
 
 ~~~~
+
 aligned(8) class APVDecoderConfigurationBox extends FullBox('apvC',version=0, flags) {
+   APVDecoderConfigurationRecord apvConfig;
+}
+
+~~~~
+
+## APV Decoder Configuration Record    {#APVDecoderConfigurationRecord}		
+
+The APVDecoderConfigurationRecord contains the information for initial configuration of a decoder which consumes the samples references the sample entry type of apv1. The information in this record is extracted from frame_header() of the bitstream stored in the track containing this record.
+
+All variation of information required to decide appropriate resource for decoding, e.g. the profiles a decoder compliant to, are carried so that the client can decide whether it has appropriate resources to completely decode the AUs in that track.
+
+### Syntax
+
+~~~~
+
+aligned(8) class APVDecoderConfigurationRecord {
    unsigned int(8) configurationVersion = 1;
    unsigned int(8) number_of_configuration_entry;
    for (i=0; i<number_of_configuration_entry; i++) {
@@ -87,6 +104,7 @@ aligned(8) class APVDecoderConfigurationBox extends FullBox('apvC',version=0, fl
       }
    }
 }
+
 ~~~~
 
 ### Semantics
