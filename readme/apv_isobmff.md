@@ -100,6 +100,7 @@ aligned(8) class APVDecoderConfigurationRecord {
             unsigned int(8) transfer_characteristics[i][j];
             unsigned int(8) matrix_coefficients[i][j];
             unsigned int(1) full_range_flag[i][j];
+            reserved_zero_7bits;
          }
       }
    }
