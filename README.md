@@ -44,10 +44,6 @@ The APV codec standard has the following features:
   For ARM
   - gcc-aarch64-linux-gnu
   - binutils-aarch64-linux-gnu
- 
-  For Windows (crosscompile)
-  - mingw-w64
-  - mingw-w64-tools
 
 - Build Instructions PC
   ```
@@ -61,15 +57,9 @@ The APV codec standard has the following features:
   cmake --build build-arm
   ```
 
-- Build Instructions Windows (Crosscompile)
-  ```
-  cmake -S . -B build-windows -DCMAKE_TOOLCHAIN_FILE=windows_x86_64_toolchain.cmake
-  cmake --build build-windows
-  ```
-
 - Output Location
-  - Executable applications can be found under build*/bin/
-  - Library files can be found under build*/lib/
+  - Executable applications can be found under build/bin/ or build-arm/bin/
+  - Library files can be found under build/lib/ or build-arm/lib/
 
 ## How to use
 ### Encoder
@@ -96,6 +86,18 @@ Displaying help:
 Decoding:
 
     oapv_app_dec -i encoded.apv -o output.y4m
+
+## Utility
+
+### Graphical APV bitstream parser
+
+Pattern file of APV bitstream for [ImHex](https://github.com/WerWolv/ImHex) is provided [here](/util/apv.hexpat).
+1. Install [ImHex](https://github.com/WerWolv/ImHex) application
+2. Download [APV pattern file](/util/apv.hexpat)
+2. Open APV bitstream (\*.apv file) with ImHex
+3. Import the APV pattern file on Pattern editor view of ImHex and apply
+
+![APV_on_ImHex](/readme/img/apv_parser_on_imhex.png)
 
 ## Testing
 
