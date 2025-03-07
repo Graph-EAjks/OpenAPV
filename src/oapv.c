@@ -1670,6 +1670,13 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
 
     /* byte align */
     oapv_bsr_align8(bs);
+    oapv_assert_rv(BSR_GET_READ_BYTE(bs) <= tile->th.tile_data_size[c], OAPV_ERR_MALFORMED_BITSTREAM);
+
+    int left_byte = tile->th.tile_data_size[c] - BSR_GET_READ_BYTE(bs);
+    if (left_byte > 0) {
+        BSR_MOVE_BYTE_ALIGN(bs, left_byte);
+    }
+
     return OAPV_OK;
 }
 
@@ -1699,7 +1706,9 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
         }
     }
 
+    oapv_bs_t bs_comp;
     for(c = 0; c < ctx->num_comp; c++) {
+        oapv_bsr_init(&bs_comp, BSR_GET_CUR(&bs), tile->th.tile_data_size[c], NULL);
         int  tc, s_dst;
         s16 *dst;
 
@@ -1714,7 +1723,8 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
             s_dst = ctx->imgb->s[c];
         }
 
-        ret = dec_tile_comp(tile, ctx, core, &bs, c, s_dst, dst);
+        ret = dec_tile_comp(tile, ctx, core, &bs_comp, c, s_dst, dst);
+        BSR_MOVE_BYTE_ALIGN(&bs, tile->th.tile_data_size[c]);
         oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
     }
 
