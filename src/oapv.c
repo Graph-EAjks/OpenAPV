@@ -1486,6 +1486,131 @@ int oapve_param_default(oapve_param_t *param)
 
     return OAPV_OK;
 }
+///////////////////////////////////////////////////////////////////////////////
+// parameter parsing helper function for encoder
+
+// clang-format off
+#define PARAMS_END_KEY     (0)
+#define PARAM_STR_MAX_LEN  (256)
+
+#define DT_INTEGER         (1 << 0) /* integer type value */
+#define DT_DOUBLE          (1 << 1) /* double type value  */
+#define DT_STRING          (1 << 2)  /* string type value  */
+
+#define OFFSET(x)          offsetof(oapve_param_t, x)
+
+#define ENC_SET_PARAM_DATA(param, dtype) \
+    { .name=#param, .type=dtype, .offset=OFFSET(param) }
+
+typedef struct enc_param_data {
+    const char *name;   /* text string conneced to param of a given name */
+    int         type;   /* data type for a given param */
+    int         offset; /* the offset relative to the oapve_param_t structure where the param value is stored */
+} enc_param_data_t;
+
+/* define various command line options as a table */
+static const enc_param_data_t enc_params[] = {
+    ENC_SET_PARAM_DATA(profile_idc,                               DT_INTEGER ),
+    ENC_SET_PARAM_DATA(level_idc,                                 DT_INTEGER ),
+    ENC_SET_PARAM_DATA(band_idc,                                  DT_INTEGER ),
+
+    ENC_SET_PARAM_DATA( w,                                        DT_INTEGER ),
+    ENC_SET_PARAM_DATA( h,                                        DT_INTEGER ),
+    ENC_SET_PARAM_DATA( fps_num,                                  DT_INTEGER ),
+    ENC_SET_PARAM_DATA( fps_den,                                  DT_INTEGER),
+
+    ENC_SET_PARAM_DATA( rc_type,                                  DT_INTEGER ),
+    ENC_SET_PARAM_DATA( qp,                                       DT_INTEGER ),
+    ENC_SET_PARAM_DATA( qp_offset_c1,                             DT_INTEGER ),
+    ENC_SET_PARAM_DATA( qp_offset_c2,                             DT_INTEGER ),
+    ENC_SET_PARAM_DATA( qp_offset_c3,                             DT_INTEGER ),
+
+    ENC_SET_PARAM_DATA( bitrate,                                  DT_INTEGER ),
+    ENC_SET_PARAM_DATA( use_filler,                               DT_INTEGER ),
+    ENC_SET_PARAM_DATA( csp,                                      DT_INTEGER ),
+
+    ENC_SET_PARAM_DATA(tile_cols,                                 DT_INTEGER ),
+    ENC_SET_PARAM_DATA(tile_rows,                                 DT_INTEGER ),
+    ENC_SET_PARAM_DATA(tile_w_mb,                                 DT_INTEGER ),
+    ENC_SET_PARAM_DATA(tile_h_mb,                                 DT_INTEGER ),
+
+    ENC_SET_PARAM_DATA(color_description_present_flag,            DT_INTEGER ),
+    ENC_SET_PARAM_DATA(color_primaries,                           DT_INTEGER ),
+    ENC_SET_PARAM_DATA(transfer_characteristics,                  DT_INTEGER ),
+    ENC_SET_PARAM_DATA(matrix_coefficients,                       DT_INTEGER ),
+    ENC_SET_PARAM_DATA(full_range_flag,                           DT_INTEGER ),
+
+    /* termination */
+    { .name = PARAMS_END_KEY }
+};
+// clang-format on
+
+static int enc_param_search_name(const char * name)
+{
+    int idx = 0;
+    const enc_param_data_t* p = enc_params;
+
+    while(p->name != PARAMS_END_KEY)
+    {
+        if(!strcmp(name, p->name))
+        {
+            return idx;
+        }
+        idx++;
+        p++;
+    }
+    return -1;
+}
+
+int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value)
+{
+    int ival;
+    double dval;
+    char *endptr;
+    const enc_param_data_t* p = enc_params;
+
+    if(!param || !name || !value) {
+        return OAPV_ERR_INVALID_ARGUMENT;
+    }
+
+    int idx = enc_param_search_name(name);
+    if( idx < 0 )
+        return OAPV_ERR_INVALID_ARGUMENT;
+
+    p = enc_params + idx;
+
+    switch(p->type) {
+        case DT_INTEGER:
+            ival = strtol(value, &endptr, 10);
+            if (*endptr != '\0')
+                return OAPV_ERR_INVALID_ARGUMENT;
+
+            *((int*)((char*)param + p->offset)) = ival;
+
+            break;
+        case DT_DOUBLE:
+            dval = strtod(value, &endptr);
+            if (*endptr != '\0')
+                return OAPV_ERR_INVALID_ARGUMENT;
+
+            *((double*)((char*)param + p->offset)) = dval;
+
+            break;
+        case DT_STRING:
+
+            strncpy((char*)((char*)param + p->offset), value, PARAM_STR_MAX_LEN);
+
+            // If PARAM_STR_MAX_LEN is less than or equal to the length of val,
+            // a null character (\0) is not appended to the copied string (char*)(args->opts[idx].opt_storage)
+            // The line below prevents truncation of destination string to not-null terminated string
+            ((char*)((char*)param + p->offset))[PARAM_STR_MAX_LEN-1] = 0;
+
+            break;
+        default:
+            return OAPV_ERR;
+    }
+    return OAPV_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // enc of encoder code

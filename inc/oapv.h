@@ -504,6 +504,7 @@ oapve_t OAPV_EXPORT oapve_create(oapve_cdesc_t *cdesc, int *err);
 void OAPV_EXPORT oapve_delete(oapve_t eid);
 int OAPV_EXPORT oapve_config(oapve_t eid, int cfg, void *buf, int *size);
 int OAPV_EXPORT oapve_param_default(oapve_param_t *param);
+int OAPV_EXPORT oapve_param_parse(oapve_param_t* param, const char* name,  const char* value);
 int OAPV_EXPORT oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb, oapve_stat_t *stat, oapv_frms_t *rfrms);
 
 /*****************************************************************************
