@@ -1489,6 +1489,8 @@ int oapve_param_default(oapve_param_t *param)
 ///////////////////////////////////////////////////////////////////////////////
 // parameter parsing helper function for encoder
 
+#include <stddef.h> // for ''offsetof()'
+
 // clang-format off
 #define PARAMS_END_KEY     (0)
 #define PARAM_STR_MAX_LEN  (256)
