@@ -1704,8 +1704,8 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
     }
 
     for(c = 0; c < ctx->num_comp; c++) {
-        int       tc, s_dst;
-        s16      *dst;
+        int  tc, s_dst;
+        s16 *dst;
         oapv_bs_t bsc; // bs for 'tile_data()' syntax
 
         oapv_bsr_init(&bsc, BSR_GET_CUR(&bs), tile->th.tile_data_size[c], NULL);
