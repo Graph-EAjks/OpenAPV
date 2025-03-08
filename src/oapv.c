@@ -1531,6 +1531,7 @@ static const enc_param_data_t enc_params[] = {
     ENC_SET_PARAM_DATA(tile_rows,                                 DT_INTEGER ),
     ENC_SET_PARAM_DATA(tile_w_mb,                                 DT_INTEGER ),
     ENC_SET_PARAM_DATA(tile_h_mb,                                 DT_INTEGER ),
+    ENC_SET_PARAM_DATA(preset,                                    DT_INTEGER ),
     ENC_SET_PARAM_DATA(color_description_present_flag,            DT_INTEGER ),
     ENC_SET_PARAM_DATA(color_primaries,                           DT_INTEGER ),
     ENC_SET_PARAM_DATA(transfer_characteristics,                  DT_INTEGER ),
