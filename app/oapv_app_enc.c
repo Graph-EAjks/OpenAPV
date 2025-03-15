@@ -70,11 +70,11 @@ static const args_opt_t enc_args_opts[] = {
         "file name of reconstructed video"
     },
     {
-        'w',  "width", ARGS_VAL_TYPE_INTEGER | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
+        'w',  "width", ARGS_VAL_TYPE_STRING | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
         "pixel width of input video"
     },
     {
-        'h',  "height", ARGS_VAL_TYPE_INTEGER | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
+        'h',  "height", ARGS_VAL_TYPE_STRING | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
         "pixel height of input video"
     },
     {
@@ -141,6 +141,7 @@ static const args_opt_t enc_args_opts[] = {
         ARGS_NO_KEY,  "qp-offset-c3", ARGS_VAL_TYPE_INTEGER, 0, NULL,
         "QP offset value for Component 3"
     },
+#if 0
     {
         ARGS_NO_KEY,  "tile-w-mb", ARGS_VAL_TYPE_INTEGER, 0, NULL,
         "width of tile in units of MBs"
@@ -149,15 +150,20 @@ static const args_opt_t enc_args_opts[] = {
         ARGS_NO_KEY,  "tile-h-mb", ARGS_VAL_TYPE_INTEGER, 0, NULL,
         "height of tile in units of MBs"
     },
+#endif
+    {
+        ARGS_NO_KEY,  "tile-w", ARGS_VAL_TYPE_STRING, 0, NULL,
+        "width of tile in units of pixels"
+    },
+    {
+        ARGS_NO_KEY,  "tile-h", ARGS_VAL_TYPE_STRING, 0, NULL,
+        "height of tile in units of pixels"
+    },
     {
         ARGS_NO_KEY,  "bitrate", ARGS_VAL_TYPE_STRING, 0, NULL,
         "enable ABR rate control\n"
         "      bitrate in terms of kilo-bits per second: Kbps(none,K,k), Mbps(M,m)\n"
         "      ex) 100 = 100K = 0.1M"
-    },
-    {
-        ARGS_NO_KEY,  "use-filler", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "user filler flag"
     },
     {
         ARGS_NO_KEY,  "q-matrix-c0", ARGS_VAL_TYPE_STRING, 0, NULL,
@@ -197,13 +203,36 @@ typedef struct args_var {
     int            input_csp;
     int            seek;
     int            threads;
-    char           profile[32];
-    char           level[32];
-    int            band;
-    char           bitrate[64];
+
+    char           profile[16];
+    char           level[16];
+    char           band[16];
+
+    char           width[16];
+    char           height[16];
     char           fps[256];
-    char           q_matrix[OAPV_MAX_CC][512]; // raster-scan order
-    char           preset[32];
+
+    char           qp[16];
+    char           qp_offset_c1[16];
+    char           qp_offset_c2[16];
+    char           qp_offset_c3[16];
+    char           bitrate[32];
+
+    char           preset[16];
+    char           q_matrix[4][512];
+
+    char           q_matrix_c0[512]; // raster-scan order
+    char           q_matrix_c1[512]; // raster-scan order
+    char           q_matrix_c2[512]; // raster-scan order
+    char           q_matrix_c3[512]; // raster-scan order
+    char           tile_w[16];
+    char           tile_h[16];
+
+    char           color_primaries[16];
+    char           color_transfer[16];
+    char           color_matrix[16];
+    char           color_range[16];
+
     oapve_param_t *param;
 } args_var_t;
 
@@ -236,33 +265,32 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     strcpy(vars->profile, "422-10");
     args_set_variable_by_key_long(opts, "level", vars->level);
     strcpy(vars->level, "4.1");
-    args_set_variable_by_key_long(opts, "band", &vars->band);
-    vars->band = 2; /* default */
-    args_set_variable_by_key_long(opts, "bitrate", vars->bitrate);
+    args_set_variable_by_key_long(opts, "band", vars->band);
+    strcpy(vars->band, "2"); /* default */
+
+    args_set_variable_by_key_long(opts, "width", vars->width);
+    args_set_variable_by_key_long(opts, "height", vars->height);
     args_set_variable_by_key_long(opts, "fps", vars->fps);
-    strcpy(vars->fps, "60");
-    args_set_variable_by_key_long(opts, "q-matrix-c0", vars->q_matrix[0]);
-    strcpy(vars->q_matrix[0], "");
-    args_set_variable_by_key_long(opts, "q-matrix-c1", vars->q_matrix[1]);
-    strcpy(vars->q_matrix[1], "");
-    args_set_variable_by_key_long(opts, "q-matrix-c2", vars->q_matrix[2]);
-    strcpy(vars->q_matrix[2], "");
-    args_set_variable_by_key_long(opts, "q-matrix-c3", vars->q_matrix[3]);
-    strcpy(vars->q_matrix[3], "");
+
+    args_set_variable_by_key_long(opts, "qp", vars->qp);
+    args_set_variable_by_key_long(opts, "qp_offset_c1", vars->qp_offset_c1);
+    args_set_variable_by_key_long(opts, "qp_offset_c2", vars->qp_offset_c2);
+    args_set_variable_by_key_long(opts, "qp_offset_c3", vars->qp_offset_c3);
+
+
+    args_set_variable_by_key_long(opts, "bitrate", vars->bitrate);
+    args_set_variable_by_key_long(opts, "q-matrix-c0", vars->q_matrix_c0);
+    args_set_variable_by_key_long(opts, "q-matrix-c1", vars->q_matrix_c1);
+    args_set_variable_by_key_long(opts, "q-matrix-c2", vars->q_matrix_c2);
+    args_set_variable_by_key_long(opts, "q-matrix-c3", vars->q_matrix_c3);
+
     args_set_variable_by_key_long(opts, "threads", &vars->threads);
     vars->threads = 1; /* default */
-    args_set_variable_by_key_long(opts, "preset", vars->preset);
-    strcpy(vars->preset, "");
 
-    ARGS_SET_PARAM_VAR_KEY(opts, param, w);
-    ARGS_SET_PARAM_VAR_KEY(opts, param, h);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, use_filler);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, tile_w_mb);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, tile_h_mb);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c1);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c2);
-    ARGS_SET_PARAM_VAR_KEY_LONG(opts, param, qp_offset_c3);
+    args_set_variable_by_key_long(opts, "tile-w", vars->tile_w);
+    args_set_variable_by_key_long(opts, "tile-h", vars->tile_h);
+
+    args_set_variable_by_key_long(opts, "preset", vars->preset);
 
     return vars;
 }
@@ -367,16 +395,20 @@ static void print_config(args_var_t *vars, oapve_param_t *param)
         logv3("Reconstructed sequence : %s \n", vars->fname_rec);
     }
     logv3("    profile             = %s\n", vars->profile);
+    logv3("    level               = %s\n", vars->level);
+    logv3("    band                = %s\n", vars->band);
     logv3("    width               = %d\n", param->w);
     logv3("    height              = %d\n", param->h);
-    logv3("    FPS                 = %.2f\n", (float)param->fps_num / param->fps_den);
-    logv3("    QP                  = %d\n", param->qp);
-    logv3("    max number of AUs   = %d\n", vars->max_au);
-    logv3("    rate control type   = %s\n", (param->rc_type == OAPV_RC_ABR) ? "average Bitrate" : "constant QP");
-    if(param->rc_type == OAPV_RC_ABR) {
+    logv3("    fps                 = %.2f\n", (float)param->fps_num / param->fps_den);
+    logv3("    rate control type   = %s\n", (param->rc_type == OAPV_RC_ABR) ? "average bitrate" : "constant qp");
+    if(param->rc_type == OAPV_RC_CQP){
+        logv3("    qp                  = %d\n", param->qp);
+    }
+    else if(param->rc_type == OAPV_RC_ABR) {
         logv3("    target bitrate      = %dkbps\n", param->bitrate);
     }
-    logv3("    tile size           = %d x %d\n", param->tile_w_mb * OAPV_MB_W, param->tile_h_mb * OAPV_MB_H);
+    logv3("    max number of AUs   = %d\n", vars->max_au);
+    logv3("    tile size           = %d x %d\n", param->tile_w, param->tile_h);
 }
 
 static void print_stat_au(oapve_stat_t *stat, int au_cnt, oapve_param_t *param, int max_au, double bitrate_tot, oapv_clk_t clk_au, oapv_clk_t clk_tot)
@@ -462,108 +494,79 @@ static int kbps_str_to_int(char *str)
     return kbps;
 }
 
-static int update_param(args_var_t *vars, oapve_param_t *param)
-{
-    int q_len[OAPV_MAX_CC];
-    /* update reate controller  parameters */
-    if(strlen(vars->bitrate) > 0) {
-        param->bitrate = kbps_str_to_int(vars->bitrate);
-        param->rc_type = OAPV_RC_ABR;
+#define UPDATE_A_PARAM_W_KEY_VAL(param, key, val) \
+    if(strlen(val) > 0) { \
+        if(OAPV_FAILED(oapve_param_parse(param, key, val))) { \
+            logerr("input value (%s) of %s is invalid\n", val, key); \
+            return -1; \
+        } \
     }
 
-    /* update q_matrix */
-    for(int c = 0; c < OAPV_MAX_CC; c++) {
-        q_len[c] = (int)strlen(vars->q_matrix[c]);
-        if(q_len[c] > 0) {
-            param->use_q_matrix = 1;
-            char *qstr = vars->q_matrix[c];
-            int   qcnt = 0;
-            while(strlen(qstr) > 0 && qcnt < OAPV_BLK_D) {
-                int t0, read;
-                sscanf(qstr, "%d%n", &t0, &read);
-                if(t0 < 1 || t0 > 255) {
-                    logerr("input value (%d) for q_matrix[%d][%d] is invalid\n", t0, c, qcnt);
-                    return -1;
-                }
-                param->q_matrix[c][qcnt] = t0;
-                qstr += read;
-                qcnt++;
-            }
-            if(qcnt < OAPV_BLK_D) {
-                logerr("input number of q_matrix[%d] is not enough\n", c);
-                return -1;
-            }
-        }
-    }
+static int update_param(args_var_t *vars, oapve_param_t *param)
+{
+    UPDATE_A_PARAM_W_KEY_VAL(param, "profile", vars->profile);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "level", vars->level);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "band", vars->band);
+
+    UPDATE_A_PARAM_W_KEY_VAL(param, "width", vars->width);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "height", vars->height);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "fps", vars->fps);
+
+    UPDATE_A_PARAM_W_KEY_VAL(param, "qp", vars->qp);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "bitrate", vars->bitrate);
+
+    UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c0", vars->q_matrix_c0);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c1", vars->q_matrix_c1);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c2", vars->q_matrix_c2);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c3", vars->q_matrix_c3);
+
+    UPDATE_A_PARAM_W_KEY_VAL(param, "color-primaries", vars->color_primaries);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "color-transfer", vars->color_transfer);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "color-matrix", vars->color_matrix);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "color-range", vars->color_range);
+
 
     param->csp = vars->input_csp;
 
     /* update level idc */
-    float tmp_level = 0;
-    sscanf(vars->level, "%f", &tmp_level);
-    param->level_idc = (int)((tmp_level * 30.0) + 0.5);
+    if(OAPV_FAILED(oapve_param_parse(param, "level", vars->level))) {
+        logerr("input value of 'level' is invalid\n");
+        return -1;
+    }
+
     /* update band idc */
-    param->band_idc = vars->band;
+    if(OAPV_FAILED(oapve_param_parse(param, "band", vars->band))) {
+        logerr("input value of 'band' is invalid\n");
+        return -1;
+    }
 
     /* update fps */
-    if(strpbrk(vars->fps, "/") != NULL) {
-        sscanf(vars->fps, "%d/%d", &param->fps_num, &param->fps_den);
-    }
-    else if(strpbrk(vars->fps, ".") != NULL) {
-        float tmp_fps = 0;
-        sscanf(vars->fps, "%f", &tmp_fps);
-        param->fps_num = tmp_fps * 10000;
-        param->fps_den = 10000;
-    }
-    else {
-        sscanf(vars->fps, "%d", &param->fps_num);
-        param->fps_den = 1;
+    if(OAPV_FAILED(oapve_param_parse(param, "fps", vars->fps))) {
+        logerr("input value of 'fps' is invalid\n");
+        return -1;
     }
 
+    /* update preset */
     if(strlen(vars->preset) > 0) {
-        if(strcmp(vars->preset, "fastest") == 0) {
-            param->preset = OAPV_PRESET_FASTEST;
-        }
-        else if(strcmp(vars->preset, "fast") == 0) {
-            param->preset = OAPV_PRESET_FAST;
-        }
-        else if(strcmp(vars->preset, "medium") == 0) {
-            param->preset = OAPV_PRESET_MEDIUM;
-        }
-        else if(strcmp(vars->preset, "slow") == 0) {
-            param->preset = OAPV_PRESET_SLOW;
-        }
-        else if(strcmp(vars->preset, "placebo") == 0) {
-            param->preset = OAPV_PRESET_PLACEBO;
-        }
-        else {
-            logerr("input value of preset is invalid\n");
+        if(OAPV_FAILED(oapve_param_parse(param, "preset", vars->preset))) {
+            logerr("input value of 'preset' is invalid\n");
             return -1;
         }
     }
-    else {
-        param->preset = OAPV_PRESET_DEFAULT;
-    }
 
-    /* update tile */
-    if (param->tile_w_mb < OAPV_MIN_TILE_W_MB) {
-        param->tile_w_mb = OAPV_MIN_TILE_W_MB;
+    /* update tile information */
+    if(strlen(vars->tile_w) > 0) {
+        if(OAPV_FAILED(oapve_param_parse(param, "tile-w", vars->tile_w))) {
+            logerr("input value of 'tile-w' is invalid\n");
+            return -1;
+        }
     }
-    if (param->tile_h_mb < OAPV_MIN_TILE_H_MB) {
-        param->tile_h_mb = OAPV_MIN_TILE_H_MB;
+    if(strlen(vars->tile_h) > 0) {
+        if(OAPV_FAILED(oapve_param_parse(param, "tile-h", vars->tile_h))) {
+            logerr("input value of 'tile-h' is invalid\n");
+            return -1;
+        }
     }
-
-    int tile_w = param->tile_w_mb << OAPV_LOG2_MB_W;
-    int tile_h = param->tile_h_mb << OAPV_LOG2_MB_H;
-    int tile_cols = (param->w + tile_w - 1) / tile_w;
-    int tile_rows = (param->h + tile_h - 1) / tile_h;
-    if (tile_cols > OAPV_MAX_TILE_COLS) {
-        param->tile_w_mb = (((param->w + OAPV_MB_W - 1) >> OAPV_LOG2_MB_W) + OAPV_MAX_TILE_COLS - 1) / OAPV_MAX_TILE_COLS;
-    }
-    if (tile_rows > OAPV_MAX_TILE_ROWS) {
-        param->tile_h_mb = (((param->h + OAPV_MB_H - 1) >> OAPV_LOG2_MB_H) + OAPV_MAX_TILE_ROWS - 1) / OAPV_MAX_TILE_ROWS;
-    }
-
     return 0;
 }
 
