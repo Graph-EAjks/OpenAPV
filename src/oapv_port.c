@@ -95,6 +95,7 @@ void oapv_trace_line(char *pre)
     printf("%s\n", str);
 }
 #if defined(WIN32) || defined(WIN64)
+#include <windows.h>
 #include <sysinfoapi.h>
 #elif defined(LINUX)
 #include <sched.h>
