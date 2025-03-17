@@ -704,11 +704,11 @@ static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
 static void enc_flush(oapve_ctx_t *ctx)
 {
     // Release thread pool controller and created threads
-    if(ctx->cdesc.threads >= 1) {
+    if(ctx->threads >= 1) {
         if(ctx->tpool) {
             // thread controller instance is present
             // terminate the created thread
-            for(int i = 0; i < ctx->cdesc.threads; i++) {
+            for(int i = 0; i < ctx->threads; i++) {
                 if(ctx->thread_id[i]) {
                     // valid thread instance
                     ctx->tpool->release(&ctx->thread_id[i]);
@@ -722,7 +722,7 @@ static void enc_flush(oapve_ctx_t *ctx)
     }
 
     oapv_tpool_sync_obj_delete(&ctx->sync_obj);
-    for(int i = 0; i < ctx->cdesc.threads; i++) {
+    for(int i = 0; i < ctx->threads; i++) {
         enc_core_free(ctx->core[i]);
         ctx->core[i] = NULL;
     }
@@ -736,7 +736,14 @@ static int enc_ready(oapve_ctx_t *ctx)
     int           ret = OAPV_OK;
     oapv_assert(ctx->core[0] == NULL);
 
-    for(int i = 0; i < ctx->cdesc.threads; i++) {
+    if(ctx->cdesc.threads == OAPVE_CDESC_THREADS_AUTO) {
+        ctx->threads = 2;
+    }
+    else {
+        ctx->threads = ctx->cdesc.threads;
+    }
+
+    for(int i = 0; i < ctx->threads; i++) {
         core = enc_core_alloc();
         oapv_assert_gv(core != NULL, ret, OAPV_ERR_OUT_OF_MEMORY, ERR);
         ctx->core[i] = core;
@@ -751,10 +758,10 @@ static int enc_ready(oapve_ctx_t *ctx)
     ctx->sync_obj = oapv_tpool_sync_obj_create();
     oapv_assert_gv(ctx->sync_obj != NULL, ret, OAPV_ERR_UNKNOWN, ERR);
 
-    if(ctx->cdesc.threads >= 1) {
+    if(ctx->threads >= 1) {
         ctx->tpool = oapv_malloc(sizeof(oapv_tpool_t));
-        oapv_tpool_init(ctx->tpool, ctx->cdesc.threads);
-        for(int i = 0; i < ctx->cdesc.threads; i++) {
+        oapv_tpool_init(ctx->tpool, ctx->threads);
+        for(int i = 0; i < ctx->threads; i++) {
             ctx->thread_id[i] = ctx->tpool->create(ctx->tpool, i);
             oapv_assert_gv(ctx->thread_id[i] != NULL, ret, OAPV_ERR_UNKNOWN, ERR);
         }
@@ -1112,7 +1119,7 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapv_imgb_t *imgb_i, oapv_imgb_t *i
         ctx->tile[i].bs_buf_max = buf_size;
     }
 
-    for(int i = 0; i < ctx->cdesc.threads; i++) {
+    for(int i = 0; i < ctx->threads; i++) {
         ctx->core[i]->ctx = ctx;
         ctx->core[i]->thread_idx = i;
     }
@@ -1166,7 +1173,7 @@ static int enc_frame(oapve_ctx_t *ctx)
 
     oapv_tpool_t *tpool = ctx->tpool;
     int           res, tidx = 0, thread_num1 = 0;
-    int           parallel_task = (ctx->cdesc.threads > ctx->num_tiles) ? ctx->num_tiles : ctx->cdesc.threads;
+    int           parallel_task = (ctx->threads > ctx->num_tiles) ? ctx->num_tiles : ctx->threads;
 
     /* encode tiles ************************************/
     for(tidx = 0; tidx < (parallel_task - 1); tidx++) {

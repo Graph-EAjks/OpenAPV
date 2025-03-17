@@ -525,6 +525,8 @@ struct oapve_param {
 /*****************************************************************************
  * description for encoder creation
  *****************************************************************************/
+#define OAPVE_CDESC_THREADS_AUTO          0
+
 typedef struct oapve_cdesc oapve_cdesc_t;
 struct oapve_cdesc {
     int           max_bs_buf_size;            // max bitstream buffer size

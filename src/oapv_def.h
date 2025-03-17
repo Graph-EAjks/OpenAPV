@@ -308,6 +308,7 @@ struct oapve_ctx {
     int                       use_frm_hash;
     oapve_rc_param_t          rc_param;
 
+    int                       threads; // num of thread for encoding
     /* platform specific data, if needed */
     void                     *pf;
 };
