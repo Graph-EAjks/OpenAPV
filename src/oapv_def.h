@@ -410,6 +410,7 @@ struct oapvd_ctx {
 #include "oapv_tbl.h"
 #include "oapv_rc.h"
 #include "oapv_sad.h"
+#include "oapv_param.h"
 
 #if X86_SSE
 #include "sse/oapv_sad_sse.h"
