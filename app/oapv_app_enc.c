@@ -78,7 +78,7 @@ static const args_opt_t enc_args_opts[] = {
         "pixel height of input video"
     },
     {
-        'q',  "qp", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        'q',  "qp", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP value: 0 ~ (63 + (bitdepth - 10)*6) \n"
         "      - 10bit input: 0 ~ 63\n"
         "      - 12bit input: 0 ~ 75\n"
