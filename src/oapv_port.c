@@ -99,9 +99,8 @@ void oapv_trace_line(char *pre)
 #include <sysinfoapi.h>
 #elif defined(LINUX)
 #include <sched.h>
-#elif defined(MAXOS)
-#include <sys/types.h>
-#include <sys/sysctl.h>
+#elif defined(MACOS)
+#include <unistd.h>
 #endif
 
 int oapv_get_num_cpu_cores(void)
@@ -123,11 +122,7 @@ int oapv_get_num_cpu_cores(void)
     }
 #elif defined(MACOS)
     {
-        int ncpu;
-        size_t length = sizeof( ncpu );
-        if(!sysctlbyname("hw.logicalcpu", &ncpu, &length, NULL, 0)) {
-            num_cores = ncpu;
-        }
+        num_cores = sysconf(_SC_NPROCESSORS_ONLN);
     }
 #endif
     return num_cores;
