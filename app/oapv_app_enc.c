@@ -285,7 +285,7 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     args_set_variable_by_key_long(opts, "q-matrix-c3", vars->q_matrix_c3);
 
     args_set_variable_by_key_long(opts, "threads", &vars->threads);
-    vars->threads = 1; /* default */
+    vars->threads = OAPVE_CDESC_THREADS_AUTO; /* default */
 
     args_set_variable_by_key_long(opts, "tile-w", vars->tile_w);
     args_set_variable_by_key_long(opts, "tile-h", vars->tile_h);

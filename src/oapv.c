@@ -296,8 +296,8 @@ static void enc_minus_mid_val(s16 *coef, int w_blk, int h_blk, int bit_depth)
 static int enc_set_tile_info(oapve_tile_t *ti, int w_pel, int h_pel, int tile_w,
                              int tile_h, int *num_tile_cols, int *num_tile_rows, int *num_tiles)
 {
-    (*num_tile_cols) = (w_pel + (tile_w - 1)) / tile_w;
-    (*num_tile_rows) = (h_pel + (tile_h - 1)) / tile_h;
+    (*num_tile_cols) = oapv_div_round_up(w_pel, tile_h);
+    (*num_tile_rows) = oapv_div_round_up(h_pel, tile_h);
     (*num_tiles) = (*num_tile_cols) * (*num_tile_rows);
 
     for(int i = 0; i < (*num_tiles); i++) {
@@ -638,6 +638,39 @@ static double enc_block_rdo_placebo(oapve_ctx_t *ctx, oapve_core_t *core, int lo
     return best_cost;
 }
 
+static int enc_update_param(oapve_ctx_t* ctx, oapve_param_t* param)
+{
+    /* set various value */
+    ctx->w = oapv_div_round_up(param->w, OAPV_MB_W) * OAPV_MB_W;
+    ctx->h = oapv_div_round_up(param->h, OAPV_MB_H) * OAPV_MB_H;
+
+    /* find correct tile width and height */
+    int tile_w, tile_h;
+
+    oapv_assert_rv(param->tile_w >= OAPV_MIN_TILE_W && param->tile_h >= OAPV_MIN_TILE_H, OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv((param->tile_w & (OAPV_MB_W - 1)) == 0 && (param->tile_h & (OAPV_MB_H - 1)) == 0, OAPV_ERR_INVALID_ARGUMENT);
+
+    if (oapv_div_round_up(ctx->w, param->tile_w) > OAPV_MAX_TILE_COLS) {
+        tile_w = oapv_div_round_up(ctx->w, OAPV_MAX_TILE_COLS);
+        tile_w = oapv_div_round_up(tile_w, OAPV_MB_W) * OAPV_MB_W; // align to MB width
+    }
+    else {
+        tile_w = param->tile_w;
+    }
+    param->tile_w = tile_w;
+
+    if (oapv_div_round_up(ctx->h, param->tile_h) > OAPV_MAX_TILE_ROWS) {
+        tile_h = oapv_div_round_up(ctx->h, OAPV_MAX_TILE_ROWS);
+        tile_h = oapv_div_round_up(tile_h, OAPV_MB_H) * OAPV_MB_H; // align to MB height
+    }
+    else {
+        tile_h = param->tile_h;
+    }
+    param->tile_h = tile_h;
+
+    return OAPV_OK;
+}
+
 static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
 {
     /* check input parameters */
@@ -674,29 +707,7 @@ static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
     ctx->w = oapv_div_round_up(param->w, OAPV_MB_W) * OAPV_MB_W;
     ctx->h = oapv_div_round_up(param->h, OAPV_MB_H) * OAPV_MB_H;
 
-    /* find correct tile width and height */
-    int tile_w, tile_h;
-
-    oapv_assert_rv(param->tile_w >= OAPV_MIN_TILE_W && param->tile_h >= OAPV_MIN_TILE_H, OAPV_ERR_INVALID_ARGUMENT);
-    oapv_assert_rv((param->tile_w & (OAPV_MB_W - 1)) == 0 && (param->tile_h & (OAPV_MB_H - 1)) == 0, OAPV_ERR_INVALID_ARGUMENT);
-
-    if(oapv_div_round_up(ctx->w, param->tile_w) > OAPV_MAX_TILE_COLS) {
-        tile_w = oapv_div_round_up(ctx->w, OAPV_MAX_TILE_COLS);
-        tile_w = oapv_div_round_up(tile_w, OAPV_MB_W) * OAPV_MB_W; // align to MB width
-    }
-    else {
-        tile_w = param->tile_w;
-    }
-
-    if(oapv_div_round_up(ctx->h, param->tile_h) > OAPV_MAX_TILE_ROWS) {
-        tile_h = oapv_div_round_up(ctx->h, OAPV_MAX_TILE_ROWS);
-        tile_h = oapv_div_round_up(tile_h, OAPV_MB_H) * OAPV_MB_H; // align to MB height
-    }
-    else {
-        tile_h = param->tile_h;
-    }
-
-    enc_set_tile_info(ctx->tile, ctx->w, ctx->h, tile_w, tile_h, &ctx->num_tile_cols, &ctx->num_tile_rows, &ctx->num_tiles);
+    enc_set_tile_info(ctx->tile, ctx->w, ctx->h, ctx->param->tile_w, ctx->param->tile_h, &ctx->num_tile_cols, &ctx->num_tile_rows, &ctx->num_tiles);
 
     return OAPV_OK;
 }
@@ -736,8 +747,15 @@ static int enc_ready(oapve_ctx_t *ctx)
     int           ret = OAPV_OK;
     oapv_assert(ctx->core[0] == NULL);
 
+    int min_num_tiles = OAPV_MAX_TILES;
+    for (int i = 0; i < ctx->cdesc.max_num_frms; i++) {
+        enc_update_param(ctx, &ctx->cdesc.param[i]);
+        int num_tiles = oapv_div_round_up(ctx->w, ctx->cdesc.param[i].tile_w) * oapv_div_round_up(ctx->h, ctx->cdesc.param[i].tile_h);
+        min_num_tiles = oapv_min(min_num_tiles, num_tiles);
+    }
+
     if(ctx->cdesc.threads == OAPVE_CDESC_THREADS_AUTO) {
-        ctx->threads = 2;
+        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_min(oapv_get_num_cpu_cores(), min_num_tiles));
     }
     else {
         ctx->threads = ctx->cdesc.threads;

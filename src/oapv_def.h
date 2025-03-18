@@ -271,6 +271,7 @@ struct oapve_ctx {
     oapve_param_t            *param;
     oapv_fh_t                 fh;
     oapve_tile_t              tile[OAPV_MAX_TILES];
+    int                       num_tiles_frms[OAPV_MAX_NUM_FRAMES];
     int                       num_tiles;
     int                       num_tile_cols;
     int                       num_tile_rows;
