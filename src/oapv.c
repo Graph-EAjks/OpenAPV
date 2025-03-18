@@ -296,7 +296,7 @@ static void enc_minus_mid_val(s16 *coef, int w_blk, int h_blk, int bit_depth)
 static int enc_set_tile_info(oapve_tile_t *ti, int w_pel, int h_pel, int tile_w,
                              int tile_h, int *num_tile_cols, int *num_tile_rows, int *num_tiles)
 {
-    (*num_tile_cols) = oapv_div_round_up(w_pel, tile_h);
+    (*num_tile_cols) = oapv_div_round_up(w_pel, tile_w);
     (*num_tile_rows) = oapv_div_round_up(h_pel, tile_h);
     (*num_tiles) = (*num_tile_cols) * (*num_tile_rows);
 

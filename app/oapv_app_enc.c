@@ -81,7 +81,7 @@ static const args_opt_t enc_args_opts[] = {
         'q',  "qp", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP value: 0 ~ (63 + (bitdepth - 10)*6) \n"
         "      - 10bit input: 0 ~ 63\n"
-        "      - 12bit input: 0 ~ 75\n"
+        "      - 12bit input: 0 ~ 75"
     },
     {
         'z',  "fps", ARGS_VAL_TYPE_STRING | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
@@ -89,7 +89,8 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         'm',  "threads", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "force to use a specific number of threads"
+        "force to use a specific number of threads\n"
+        "      - '0' means decision of the number automatically"
     },
     {
         ARGS_NO_KEY,  "preset", ARGS_VAL_TYPE_STRING, 0, NULL,
@@ -141,16 +142,6 @@ static const args_opt_t enc_args_opts[] = {
         ARGS_NO_KEY,  "qp-offset-c3", ARGS_VAL_TYPE_INTEGER, 0, NULL,
         "QP offset value for Component 3"
     },
-#if 0
-    {
-        ARGS_NO_KEY,  "tile-w-mb", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "width of tile in units of MBs"
-    },
-    {
-        ARGS_NO_KEY,  "tile-h-mb", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "height of tile in units of MBs"
-    },
-#endif
     {
         ARGS_NO_KEY,  "tile-w", ARGS_VAL_TYPE_STRING, 0, NULL,
         "width of tile in units of pixels"
@@ -381,8 +372,33 @@ static void print_commandline(int argc, const char **argv)
     logv3("\n\n");
 }
 
+static void add_thousands_comma_to_number(char *in, char *out)
+{
+    int len, left = 0;
+    len = strlen(in);
+    left = len % 3;
+
+    while(len > 0) {
+        *out = *in;
+
+        out++; in++;
+
+        left--;
+        len--;
+
+        if(left == 0 && len >= 3) {
+            *out = ',';
+            out++;
+            left = 3;
+        }
+    }
+    *out='\0';
+}
+
 static void print_config(args_var_t *vars, oapve_param_t *param)
 {
+    char tstr[32];
+
     if(op_verbose < VERBOSE_FRAME)
         return;
 
@@ -405,7 +421,8 @@ static void print_config(args_var_t *vars, oapve_param_t *param)
         logv3("    qp                  = %d\n", param->qp);
     }
     else if(param->rc_type == OAPV_RC_ABR) {
-        logv3("    target bitrate      = %dkbps\n", param->bitrate);
+        //add_thousands_comma_to_number(vars->bitrate, tstr);
+        logv3("    target bitrate      = %s\n", vars->bitrate);
     }
     logv3("    max number of AUs   = %d\n", vars->max_au);
     logv3("    tile size           = %d x %d\n", param->tile_w, param->tile_h);
