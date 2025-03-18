@@ -397,8 +397,6 @@ static void add_thousands_comma_to_number(char *in, char *out)
 
 static void print_config(args_var_t *vars, oapve_param_t *param)
 {
-    char tstr[32];
-
     if(op_verbose < VERBOSE_FRAME)
         return;
 
