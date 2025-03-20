@@ -210,7 +210,6 @@ typedef struct args_var {
     char           bitrate[32];
 
     char           preset[16];
-    char           q_matrix[4][512];
 
     char           q_matrix_c0[512]; // raster-scan order
     char           q_matrix_c1[512]; // raster-scan order
@@ -528,7 +527,12 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
     UPDATE_A_PARAM_W_KEY_VAL(param, "fps", vars->fps);
 
     UPDATE_A_PARAM_W_KEY_VAL(param, "qp", vars->qp);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "qp-offset-c1", vars->qp_offset_c1);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "qp-offset-c2", vars->qp_offset_c2);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "qp-offset-c3", vars->qp_offset_c3);
     UPDATE_A_PARAM_W_KEY_VAL(param, "bitrate", vars->bitrate);
+
+    UPDATE_A_PARAM_W_KEY_VAL(param, "preset", vars->preset);
 
     UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c0", vars->q_matrix_c0);
     UPDATE_A_PARAM_W_KEY_VAL(param, "q-matrix-c1", vars->q_matrix_c1);
@@ -541,47 +545,10 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
     UPDATE_A_PARAM_W_KEY_VAL(param, "color-range", vars->color_range);
 
 
+    UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_w);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_h);
+
     param->csp = vars->input_csp;
-
-    /* update level idc */
-    if(OAPV_FAILED(oapve_param_parse(param, "level", vars->level))) {
-        logerr("input value of 'level' is invalid\n");
-        return -1;
-    }
-
-    /* update band idc */
-    if(OAPV_FAILED(oapve_param_parse(param, "band", vars->band))) {
-        logerr("input value of 'band' is invalid\n");
-        return -1;
-    }
-
-    /* update fps */
-    if(OAPV_FAILED(oapve_param_parse(param, "fps", vars->fps))) {
-        logerr("input value of 'fps' is invalid\n");
-        return -1;
-    }
-
-    /* update preset */
-    if(strlen(vars->preset) > 0) {
-        if(OAPV_FAILED(oapve_param_parse(param, "preset", vars->preset))) {
-            logerr("input value of 'preset' is invalid\n");
-            return -1;
-        }
-    }
-
-    /* update tile information */
-    if(strlen(vars->tile_w) > 0) {
-        if(OAPV_FAILED(oapve_param_parse(param, "tile-w", vars->tile_w))) {
-            logerr("input value of 'tile-w' is invalid\n");
-            return -1;
-        }
-    }
-    if(strlen(vars->tile_h) > 0) {
-        if(OAPV_FAILED(oapve_param_parse(param, "tile-h", vars->tile_h))) {
-            logerr("input value of 'tile-h' is invalid\n");
-            return -1;
-        }
-    }
     return 0;
 }
 
