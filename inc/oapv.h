@@ -469,6 +469,8 @@ static const oapv_dict_str_int_t oapv_param_opts_color_matrix[] = {
 /*****************************************************************************
  * coding parameters
  *****************************************************************************/
+#define OAPV_LEVEL_TO_LEVEL_IDC(level) (int)(((level) * 30.0) + 0.5)
+
 typedef struct oapve_param oapve_param_t;
 struct oapve_param {
     /* profile_idc defined in spec. */
