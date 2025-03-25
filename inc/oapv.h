@@ -522,11 +522,10 @@ struct oapve_param {
     int           full_range_flag;
 };
 
+#define OAPV_CDESC_THREADS_AUTO          0
 /*****************************************************************************
  * description for encoder creation
  *****************************************************************************/
-#define OAPVE_CDESC_THREADS_AUTO          0
-
 typedef struct oapve_cdesc oapve_cdesc_t;
 struct oapve_cdesc {
     int           max_bs_buf_size;            // max bitstream buffer size
