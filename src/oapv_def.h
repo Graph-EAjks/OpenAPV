@@ -353,14 +353,14 @@ struct oapvd_core {
     int          prev_1st_ac_ctx[N_C];
     int          prev_dc[N_C];
     int          dc_diff; /* DC difference, which is represented in 17 bits */
-    /* and coded as abs_dc_coeff_diff and sign_dc_coeff_diff */
+                          /* and coded as abs_dc_coeff_diff and sign_dc_coeff_diff */
     int          qp[N_C];
     int          dq_shift[N_C];
     int          tile_idx;
 
-    oapvd_ctx_t* ctx;
+    oapvd_ctx_t *ctx;
     /* platform specific data, if needed */
-    void* pf;
+    void        *pf;
 };
 
 struct oapvd_ctx {
