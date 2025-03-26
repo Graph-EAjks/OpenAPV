@@ -30,6 +30,7 @@
  */
 
 #include "oapv_def.h"
+#include <string.h>
 
 int oapve_param_default(oapve_param_t *param)
 {
@@ -175,17 +176,22 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
         param->profile_idc = ti0;
     }
     NAME_CMP("level") {
-        GET_FLOAT_OR_ERR(value, tf0);
-        // validation check
-        // level == [1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1]
-        if(tf0 == 1.0f || tf0 == 1.1f || tf0 == 2.0f || tf0 == 2.1f || \
-            tf0 == 3.0f || tf0 == 3.1f || tf0 == 4.0f || tf0 == 4.1f ||\
-            tf0 == 5.0f || tf0 == 5.1f || tf0 == 6.0f || tf0 == 6.1f ||\
-            tf0 == 7.0f || tf0 == 7.1f || tf0 == OAPV_PARAM_LEVEL_AUTO) {
-            param->level_idc = OAPV_LEVEL_TO_LEVEL_IDC(tf0);
+        if(!strcasecmp(value, "auto")) {
+            param->level_idc = OAPV_PARAM_LEVEL_AUTO;
         }
         else {
-            return OAPV_ERR_INVALID_ARGUMENT;
+            GET_FLOAT_OR_ERR(value, tf0);
+            // validation check
+            // level == [1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1]
+            if(tf0 == 1.0f || tf0 == 1.1f || tf0 == 2.0f || tf0 == 2.1f || \
+                tf0 == 3.0f || tf0 == 3.1f || tf0 == 4.0f || tf0 == 4.1f ||\
+                tf0 == 5.0f || tf0 == 5.1f || tf0 == 6.0f || tf0 == 6.1f ||\
+                tf0 == 7.0f || tf0 == 7.1f) {
+                param->level_idc = OAPV_LEVEL_TO_LEVEL_IDC(tf0);
+            }
+            else {
+                return OAPV_ERR_INVALID_ARGUMENT;
+            }
         }
     }
     NAME_CMP("band") {
@@ -224,15 +230,15 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
         }
     }
     NAME_CMP("qp") {
-        //  QP value: 0 ~ (63 + (bitdepth - 10)*6)
-        //     - 10bit input: 0 ~ 63"
-        //     - 12bit input: 0 ~ 75"
-        // max value cannot be decided without bitdepth value
-        GET_INTEGER_OR_ERR(value, ti0);
-        if (ti0 == OAPV_PARAM_QP_AUTO) {
+        if(!strcasecmp(value, "auto")) {
+            param->qp = OAPV_PARAM_QP_AUTO;
             param->rc_type = OAPV_RC_ABR;
         }
         else {
+            //  QP value: 0 ~ (63 + (bitdepth - 10)*6)
+            //     - 10bit input: 0 ~ 63"
+            //     - 12bit input: 0 ~ 75"
+            // max value cannot be decided without bitdepth value
             GET_INTEGER_MIN_MAX_OR_ERR(value, ti0, MIN_QUANT, MAX_QUANT(12));
             param->qp = ti0;
             param->rc_type = OAPV_RC_CQP;
@@ -334,7 +340,10 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
 
 #define MAX_LEVEL_NUM 14
 #define MAX_BAND_NUM  4
-float level_avail[MAX_LEVEL_NUM] = { 1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1 };
+
+static float level_avail[MAX_LEVEL_NUM] = {
+    1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1
+};
 
 static int level_idc_to_level_idx(int level_idc)
 {
@@ -347,7 +356,7 @@ static int level_idc_to_level_idx(int level_idc)
     return OAPV_ERR;
 }
 
-int32_t max_coded_data_rate[MAX_LEVEL_NUM][MAX_BAND_NUM] = {
+static int max_coded_data_rate[MAX_LEVEL_NUM][MAX_BAND_NUM] = {
     {     7000,    11000,     14000,     21000 },
     {    14000,    21000,     28000,     42000 },
     {    36000,    53000,     71000,    106000 },
@@ -361,18 +370,22 @@ int32_t max_coded_data_rate[MAX_LEVEL_NUM][MAX_BAND_NUM] = {
     {  6648000,  9972000,  13296000,  19944000 },
     { 13296000, 19944000,  26592000,  39888000 },
     { 26592000, 39888000,  53184000,  79776000 },
-    { 53184000, 79776000, 106368000, 159552000 }, };
+    { 53184000, 79776000, 106368000, 159552000 }
+};
 
-uint64_t max_luma_sample_rate[MAX_LEVEL_NUM] = {
-      3041280,    6082560,   15667200,   31334400,   66846720,   133693440,   265420800,
-    530841600, 1061683200, 2123366400, 4777574400, 8493465600, 16986931200, 33973862400 };
+static u64 max_luma_sample_rate[MAX_LEVEL_NUM] = {
+    3041280,     6082560,    15667200,   31334400,
+    66846720,    133693440,  265420800,  530841600,
+    1061683200,  2123366400, 4777574400, 8493465600,
+    16986931200, 33973862400
+};
 
 static int enc_update_param_level(oapve_param_t* param)
 {
     int w = oapv_div_round_up(param->w, OAPV_MB_W) * OAPV_MB_W;
     int h = oapv_div_round_up(param->h, OAPV_MB_H) * OAPV_MB_H;
     double fps = (double)param->fps_num / param->fps_den;
-    uint64_t luma_sample_rate = (int)((double)w * h * fps);
+    u64 luma_sample_rate = (int)((double)w * h * fps);
     int min_level_idx = 0;
     for (int i = 0 ; i < MAX_LEVEL_NUM ; i++) {
         if (luma_sample_rate < max_luma_sample_rate[i]) {
