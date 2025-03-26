@@ -755,7 +755,8 @@ static int enc_ready(oapve_ctx_t *ctx)
     }
 
     if(ctx->cdesc.threads == OAPV_CDESC_THREADS_AUTO) {
-        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_min(oapv_get_num_cpu_cores(), min_num_tiles));
+        int num_cores = oapv_get_num_cpu_cores();
+        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_min(num_cores, min_num_tiles));
     }
     else {
         ctx->threads = ctx->cdesc.threads;
@@ -1849,7 +1850,8 @@ static int dec_ready(oapvd_ctx_t *ctx)
     int i, ret = OAPV_OK;
 
     if (ctx->cdesc.threads == OAPV_CDESC_THREADS_AUTO) {
-        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_get_num_cpu_cores());
+        int num_cores = oapv_get_num_cpu_cores();
+        ctx->threads = oapv_min(OAPV_MAX_THREADS, num_cores);
     }
     else {
         ctx->threads = ctx->cdesc.threads;
