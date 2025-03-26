@@ -754,8 +754,9 @@ static int enc_ready(oapve_ctx_t *ctx)
         min_num_tiles = oapv_min(min_num_tiles, num_tiles);
     }
 
-    if(ctx->cdesc.threads == OAPVE_CDESC_THREADS_AUTO) {
-        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_min(oapv_get_num_cpu_cores(), min_num_tiles));
+    if(ctx->cdesc.threads == OAPV_CDESC_THREADS_AUTO) {
+        int num_cores = oapv_get_num_cpu_cores();
+        ctx->threads = oapv_min(OAPV_MAX_THREADS, oapv_min(num_cores, min_num_tiles));
     }
     else {
         ctx->threads = ctx->cdesc.threads;
@@ -1822,11 +1823,11 @@ ERR:
 
 static void dec_flush(oapvd_ctx_t *ctx)
 {
-    if(ctx->cdesc.threads >= 2) {
+    if(ctx->threads >= 2) {
         if(ctx->tpool) {
             // thread controller instance is present
             // terminate the created thread
-            for(int i = 0; i < ctx->cdesc.threads - 1; i++) {
+            for(int i = 0; i < ctx->threads - 1; i++) {
                 if(ctx->thread_id[i]) {
                     // valid thread instance
                     ctx->tpool->release(&ctx->thread_id[i]);
@@ -1841,7 +1842,7 @@ static void dec_flush(oapvd_ctx_t *ctx)
 
     oapv_tpool_sync_obj_delete(&(ctx->sync_obj));
 
-    for(int i = 0; i < ctx->cdesc.threads; i++) {
+    for(int i = 0; i < ctx->threads; i++) {
         dec_core_free(ctx->core[i]);
     }
 }
@@ -1850,9 +1851,18 @@ static int dec_ready(oapvd_ctx_t *ctx)
 {
     int i, ret = OAPV_OK;
 
+    if (ctx->cdesc.threads == OAPV_CDESC_THREADS_AUTO) {
+        int num_cores = oapv_get_num_cpu_cores();
+        ctx->threads = oapv_min(OAPV_MAX_THREADS, num_cores);
+    }
+    else {
+        ctx->threads = ctx->cdesc.threads;
+    }
+    oapv_assert_gv(ctx->threads > 0 && ctx->threads <= OAPV_MAX_THREADS, ret, OAPV_ERR_INVALID_ARGUMENT, ERR);
+
     if(ctx->core[0] == NULL) {
         // create cores
-        for(i = 0; i < ctx->cdesc.threads; i++) {
+        for(i = 0; i < ctx->threads; i++) {
             ctx->core[i] = dec_core_alloc();
             oapv_assert_gv(ctx->core[i], ret, OAPV_ERR_OUT_OF_MEMORY, ERR);
             ctx->core[i]->ctx = ctx;
@@ -1860,7 +1870,7 @@ static int dec_ready(oapvd_ctx_t *ctx)
     }
 
     // initialize the threads to NULL
-    for(i = 0; i < OAPV_MAX_THREADS; i++) {
+    for(i = 0; i < ctx->threads; i++) {
         ctx->thread_id[i] = 0;
     }
 
@@ -1868,10 +1878,10 @@ static int dec_ready(oapvd_ctx_t *ctx)
     ctx->sync_obj = oapv_tpool_sync_obj_create();
     oapv_assert_gv(ctx->sync_obj != NULL, ret, OAPV_ERR_UNKNOWN, ERR);
 
-    if(ctx->cdesc.threads >= 2) {
+    if(ctx->threads >= 2) {
         ctx->tpool = oapv_malloc(sizeof(oapv_tpool_t));
-        oapv_tpool_init(ctx->tpool, ctx->cdesc.threads - 1);
-        for(i = 0; i < ctx->cdesc.threads - 1; i++) {
+        oapv_tpool_init(ctx->tpool, ctx->threads - 1);
+        for(i = 0; i < ctx->threads - 1; i++) {
             ctx->thread_id[i] = ctx->tpool->create(ctx->tpool, i);
             oapv_assert_gv(ctx->thread_id[i] != NULL, ret, OAPV_ERR_UNKNOWN, ERR);
         }
@@ -1921,7 +1931,7 @@ oapvd_t oapvd_create(oapvd_cdesc_t *cdesc, int *err)
     ctx = NULL;
 
     /* check if any decoder argument is correctly set */
-    oapv_assert_gv(cdesc->threads > 0 && cdesc->threads <= OAPV_MAX_THREADS, ret, OAPV_ERR_INVALID_ARGUMENT, ERR);
+    oapv_assert_gv((cdesc->threads > 0 && cdesc->threads <= OAPV_MAX_THREADS) || cdesc->threads == OAPV_CDESC_THREADS_AUTO , ret, OAPV_ERR_INVALID_ARGUMENT, ERR);
 
     /* memory allocation for ctx and core structure */
     ctx = (oapvd_ctx_t *)dec_ctx_alloc();
@@ -2018,7 +2028,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             int           parallel_task = 1;
             int           tidx = 0;
 
-            parallel_task = (ctx->cdesc.threads > ctx->num_tiles) ? ctx->num_tiles : ctx->cdesc.threads;
+            parallel_task = (ctx->threads > ctx->num_tiles) ? ctx->num_tiles : ctx->threads;
 
             /* decode tiles ************************************/
             for(tidx = 0; tidx < (parallel_task - 1); tidx++) {
