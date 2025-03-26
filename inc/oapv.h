@@ -86,6 +86,7 @@ extern "C" {
 #define OAPV_ERR_OUT_OF_BS_BUF          (-203) /* too small bitstream buffer */
 #define OAPV_ERR_NOT_FOUND              (-204)
 #define OAPV_ERR_FAILED_SYSCALL         (-301)   /* failed system call */
+#define OAPV_ERR_INVALID_LEVEL          (-401)
 #define OAPV_ERR_UNKNOWN                (-32767) /* unknown error */
 
 /* return value checking */
@@ -382,6 +383,8 @@ struct oapv_au_info {
 /*****************************************************************************
  * constant string values for oapve_param_parse() and command-line options
  *****************************************************************************/
+#define OAPV_PARAM_LEVEL_AUTO           0
+#define OAPV_PARAM_QP_AUTO              255
 typedef struct oapv_dict_str_int oapv_dict_str_int_t; // dictionary type
 struct oapv_dict_str_int {
     const char * key;

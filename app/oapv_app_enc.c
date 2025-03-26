@@ -119,7 +119,7 @@ static const args_opt_t enc_args_opts[] = {
         "level setting (1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1)"
     },
     {
-        ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_STRING, 0, NULL,
         "band setting (0, 1, 2, 3)"
     },
     {
@@ -254,7 +254,7 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     args_set_variable_by_key_long(opts, "profile", vars->profile);
     strcpy(vars->profile, "422-10");
     args_set_variable_by_key_long(opts, "level", vars->level);
-    strcpy(vars->level, "4.1");
+    sprintf(vars->level, "%d", OAPV_PARAM_LEVEL_AUTO); /* default */
     args_set_variable_by_key_long(opts, "band", vars->band);
     strcpy(vars->band, "2"); /* default */
 
@@ -263,6 +263,7 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     args_set_variable_by_key_long(opts, "fps", vars->fps);
 
     args_set_variable_by_key_long(opts, "qp", vars->qp);
+    sprintf(vars->qp, "%d", OAPV_PARAM_QP_AUTO); /* default */
     args_set_variable_by_key_long(opts, "qp_offset_c1", vars->qp_offset_c1);
     args_set_variable_by_key_long(opts, "qp_offset_c2", vars->qp_offset_c2);
     args_set_variable_by_key_long(opts, "qp_offset_c3", vars->qp_offset_c3);
@@ -730,10 +731,9 @@ int main(int argc, const char **argv)
     }
 
     /* create encoder */
-    id = oapve_create(&cdesc, NULL);
+    id = oapve_create(&cdesc, &ret);
     if(id == NULL) {
         logerr("cannot create OAPV encoder\n");
-        ret = -1;
         goto ERR;
     }
 
