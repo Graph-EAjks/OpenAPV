@@ -446,7 +446,7 @@ int main(int argc, const char **argv)
         goto ERR;
     }
     // create decoder
-    if(!strcasecmp(args_var->threads, "auto")){
+    if(!strcmp(args_var->threads, "auto")){
         cdesc.threads = OAPV_CDESC_THREADS_AUTO;
     }
     else {

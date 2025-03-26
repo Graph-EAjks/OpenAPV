@@ -176,7 +176,7 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
         param->profile_idc = ti0;
     }
     NAME_CMP("level") {
-        if(!strcasecmp(value, "auto")) {
+        if(!strcmp(value, "auto")) {
             param->level_idc = OAPV_PARAM_LEVEL_AUTO;
         }
         else {
@@ -230,7 +230,7 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
         }
     }
     NAME_CMP("qp") {
-        if(!strcasecmp(value, "auto")) {
+        if(!strcmp(value, "auto")) {
             param->qp = OAPV_PARAM_QP_AUTO;
             param->rc_type = OAPV_RC_ABR;
         }
