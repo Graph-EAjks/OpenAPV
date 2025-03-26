@@ -82,7 +82,7 @@ static const args_opt_t enc_args_opts[] = {
         "QP value: 0 ~ (63 + (bitdepth - 10)*6) \n"
         "      - 10bit input: 0 ~ 63\n"
         "      - 12bit input: 0 ~ 75"
-        "      - 'auto' means decision of the QP value automatically"
+        "      - 'auto' means that the value is internally determined"
     },
     {
         'z',  "fps", ARGS_VAL_TYPE_STRING | ARGS_VAL_TYPE_MANDATORY, 0, NULL,
@@ -91,7 +91,7 @@ static const args_opt_t enc_args_opts[] = {
     {
         'm',  "threads", ARGS_VAL_TYPE_STRING, 0, NULL,
         "force to use a specific number of threads\n"
-        "      - 'auto' means decision of the number automatically"
+        "      - 'auto' means that the value is internally determined"
     },
     {
         ARGS_NO_KEY,  "preset", ARGS_VAL_TYPE_STRING, 0, NULL,
@@ -118,7 +118,7 @@ static const args_opt_t enc_args_opts[] = {
     {
         ARGS_NO_KEY,  "level", ARGS_VAL_TYPE_STRING, 0, NULL,
         "level setting (1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1)\n"
-        "      - 'auto' means decision of the level value automatically"
+        "      - 'auto' means that the value is internally determined"
     },
     {
         ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_STRING, 0, NULL,

@@ -71,7 +71,7 @@ static const args_opt_t dec_args_opts[] = {
     {
         'm',  "threads", ARGS_VAL_TYPE_STRING, 0, NULL,
         "force to use a specific number of threads"
-        "      - 'auto' means decision of the number automatically"
+        "      - 'auto' means that the value is internally determined"
     },
     {
         'd',  "output-depth", ARGS_VAL_TYPE_INTEGER, 0, NULL,
