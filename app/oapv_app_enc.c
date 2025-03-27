@@ -119,7 +119,7 @@ static const args_opt_t enc_args_opts[] = {
         "level setting (1, 1.1, 2, 2.1, 3, 3.1, 4, 4.1, 5, 5.1, 6, 6.1, 7, 7.1)"
     },
     {
-        ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_STRING, 0, NULL,
         "band setting (0, 1, 2, 3)"
     },
     {
@@ -131,15 +131,15 @@ static const args_opt_t enc_args_opts[] = {
         "number of skipped access units before encoding"
     },
     {
-        ARGS_NO_KEY,  "qp-offset-c1", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        ARGS_NO_KEY,  "qp-offset-c1", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP offset value for Component 1 (Cb)"
     },
     {
-        ARGS_NO_KEY,  "qp-offset-c2", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        ARGS_NO_KEY,  "qp-offset-c2", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP offset value for Component 2 (Cr)"
     },
     {
-        ARGS_NO_KEY,  "qp-offset-c3", ARGS_VAL_TYPE_INTEGER, 0, NULL,
+        ARGS_NO_KEY,  "qp-offset-c3", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP offset value for Component 3"
     },
     {
@@ -546,7 +546,7 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
 
 
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_w);
-    UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_h);
+    UPDATE_A_PARAM_W_KEY_VAL(param, "tile-h", vars->tile_h);
 
     param->csp = vars->input_csp;
     return 0;
