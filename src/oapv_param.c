@@ -46,7 +46,7 @@ int oapve_param_default(oapve_param_t *param)
     param->tile_h = 16 * OAPV_MB_H; // default: 256
 
     param->profile_idc = OAPV_PROFILE_422_10;
-    param->level_idc = OAPV_PARAM_LEVEL_AUTO;
+    param->level_idc = OAPV_PARAM_LEVEL_IDC_AUTO;
     param->band_idc = 2;
 
     param->use_q_matrix = 0;
@@ -177,7 +177,7 @@ int oapve_param_parse(oapve_param_t *param, const char *name,  const char *value
     }
     NAME_CMP("level") {
         if(!strcmp(value, "auto")) {
-            param->level_idc = OAPV_PARAM_LEVEL_AUTO;
+            param->level_idc = OAPV_PARAM_LEVEL_IDC_AUTO;
         }
         else {
             GET_FLOAT_OR_ERR(value, tf0);
@@ -406,7 +406,7 @@ static int enc_update_param_level(oapve_param_t* param)
 
     int min_level_idc = OAPV_LEVEL_TO_LEVEL_IDC(level_avail[min_level_idx]);
 
-    if (param->level_idc == OAPV_PARAM_LEVEL_AUTO) {
+    if (param->level_idc == OAPV_PARAM_LEVEL_IDC_AUTO) {
         param->level_idc = min_level_idc;
     }
     else {
