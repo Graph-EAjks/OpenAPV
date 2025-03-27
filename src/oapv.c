@@ -642,7 +642,7 @@ static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
 {
     /* check input parameters */
     oapv_assert_rv(param->w > 0 && param->h > 0, OAPV_ERR_INVALID_ARGUMENT);
-    oapv_assert_rv((param->qp >= MIN_QUANT && param->qp <= MAX_QUANT(10)) || param->qp == OAPV_PARAM_QP_AUTO, OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv((param->qp >= MIN_QUANT && param->qp <= MAX_QUANT(10)) || param->qp == OAPVE_PARAM_QP_AUTO, OAPV_ERR_INVALID_ARGUMENT);
 
     ctx->qp_offset[Y_C] = 0;
     ctx->qp_offset[U_C] = param->qp_offset_c1;
@@ -1139,7 +1139,7 @@ static int enc_frame(oapve_ctx_t *ctx)
         }
 
         ctx->rc_param.lambda = oapve_rc_estimate_pic_lambda(ctx, cost_sum);
-        if (ctx->param->qp == OAPV_PARAM_QP_AUTO || ctx->rc_param.is_updated != 0) {
+        if (ctx->param->qp == OAPVE_PARAM_QP_AUTO || ctx->rc_param.is_updated != 0) {
             ctx->rc_param.qp = oapve_rc_estimate_pic_qp(ctx->rc_param.lambda);
         }
         else {
