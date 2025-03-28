@@ -174,7 +174,6 @@ struct MetadataPayload {
 
     u64 endOffset = $ + payloadSize;
 
-
     if (payloadType == 4) ptype_str = "itu_t_t35";
     else if (payloadType == 5) ptype_str = "mdcv";
     else if (payloadType == 6) ptype_str = "cll";
@@ -187,7 +186,6 @@ struct MetadataPayload {
     u8 payloadData[while($ < endOffset)] [[sealed]];
 
     metadata_payload_count += 1;
-
 
 } [[name(std::format("MetadataPayload[{}]:{}", (metadata_payload_count - 1), ptype_str))]];
 
