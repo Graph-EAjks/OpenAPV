@@ -530,7 +530,6 @@ struct oapve_param {
     int           full_range_flag;
 };
 
-#define OAPV_CDESC_THREADS_AUTO          0
 /*****************************************************************************
  * automatic assignment of number of threads in creation of encoder & decoder
  *****************************************************************************/
