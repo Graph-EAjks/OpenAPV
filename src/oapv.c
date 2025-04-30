@@ -1303,10 +1303,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     oapv_bsw_init(bs, bitb->addr, bitb->bsize, NULL);
     oapv_mset(stat, 0, sizeof(oapve_stat_t));
 
-    u8       *bs_pos_au_beg = oapv_bsw_sink(bs); // address syntax of au size
     u8       *bs_pos_pbu_beg;
     oapv_bs_t bs_pbu_beg;
-    oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
 
     oapv_bsw_write(bs, 0x61507631, 32); // signature ('aPv1')
 
@@ -1381,9 +1379,6 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
             DUMP_LOAD(1);
         }
     }
-
-    u32 au_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_au_beg) - 4 /* au_size */;
-    oapv_bsw_write_direct(bs_pos_au_beg, au_size, 32); /* u(32) */
 
     oapv_bsw_deinit(&ctx->bs); /* de-init BSW */
     stat->write = bsw_get_write_byte(&ctx->bs);

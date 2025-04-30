@@ -856,9 +856,17 @@ int main(int argc, const char **argv)
                     }
                 }
 
+                unsigned char au_size[4];
+                snprintf(au_size, sizeof(au_size), "%d", stat.write);
+
                 /* store bitstream */
                 if(OAPV_SUCCEEDED(ret)) {
                     if(is_out && stat.write > 0) {
+                        if(write_data(args_var->fname_out, au_size, 4)) {
+                            logerr("cannot write bitstream\n");
+                            ret = -1;
+                            goto ERR;
+                        }
                         if(write_data(args_var->fname_out, bs_buf, stat.write)) {
                             logerr("cannot write bitstream\n");
                             ret = -1;
