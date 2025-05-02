@@ -552,6 +552,11 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-h", vars->tile_h);
 
     param->csp = vars->input_csp;
+    // ensure frame width multiple of 2 in case of 422 format
+    if ((param->csp == 2) && (param->w & 0x1)) {
+        logerr("width should be a multiple of 2 for '--input-csp 2'\n");
+        return -1;
+    }
     return 0;
 }
 
