@@ -87,3 +87,5 @@ Actual compressed bitrate may have about 10% variations according to complexity 
 |  | 25p | xxx | xxx | xxx | xxx |
 |  | 30p | xxx | xxx | xxx | xxx |
 |  | 60p | xxx | xxx | xxx | xxx |
+
+< table: Typical bitrates (Mbps) of 4:4:4 color sampling >
