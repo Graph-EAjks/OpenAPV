@@ -163,11 +163,8 @@ When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sa
 
 ~~~~
 aligned(8) class APVSample{
-    for (i=0; i<sample_size; ) { // size of Sample from SampleSizeBox
-        unsigned int(32) au_length;
-        bit(au_length * 8) access_unit;
-        i += au_length;
-    }
+    unsigned int(32) au_length;
+    bit(au_length * 8) access_unit;
 }
 ~~~~
 
