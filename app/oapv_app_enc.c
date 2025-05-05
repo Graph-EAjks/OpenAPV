@@ -325,14 +325,12 @@ ERR:
 static int check_conf(oapve_cdesc_t *cdesc, args_var_t *vars)
 {
     int i;
-    // ensure frame width multiple of 2 in case of 422 format
     for(i = 0; i < cdesc->max_num_frms; i++) {
+        // ensure frame width multiple of 2 in case of 422 format
         if ((vars->input_csp == 2) && (cdesc->param[FRM_IDX].w & 0x1)) {
             logerr("%d-th frame's width should be a multiple of 2 for '--input-csp 2'\n", i);
             return -1;
         }
-    }
-    for(i = 0; i < cdesc->max_num_frms; i++) {
         if(vars->hash && strlen(vars->fname_rec) == 0) {
             logerr("cannot use frame hash without reconstructed picture option!\n");
             return -1;
