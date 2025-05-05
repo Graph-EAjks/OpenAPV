@@ -324,6 +324,11 @@ ERR:
 
 static int check_conf(oapve_cdesc_t *cdesc, args_var_t *vars)
 {
+    // ensure frame width multiple of 2 in case of 422 format
+    if ((vars->input_csp == 2) && (cdesc->param[FRM_IDX].w & 0x1)) {
+        logerr("width should be a multiple of 2 for '--input-csp 2'\n");
+        return -1;
+    }
     int i;
     for(i = 0; i < cdesc->max_num_frms; i++) {
         if(vars->hash && strlen(vars->fname_rec) == 0) {
@@ -552,11 +557,6 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-h", vars->tile_h);
 
     param->csp = vars->input_csp;
-    // ensure frame width multiple of 2 in case of 422 format
-    if ((param->csp == 2) && (param->w & 0x1)) {
-        logerr("width should be a multiple of 2 for '--input-csp 2'\n");
-        return -1;
-    }
     return 0;
 }
 
