@@ -159,7 +159,7 @@ the full_range_flag field in the frame header of the frames whose value of the p
 ## APV Sample Description
 
 ###	Format of sample
-When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sample shall contain a size of access unit and access unit of APV coded data.
+When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sample shall contain a size of access unit and an access unit of APV coded data.
 
 ~~~~
 aligned(8) class APVSample{
