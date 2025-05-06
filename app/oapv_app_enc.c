@@ -327,7 +327,7 @@ static int check_conf(oapve_cdesc_t *cdesc, args_var_t *vars)
     int i;
     for(i = 0; i < cdesc->max_num_frms; i++) {
         // ensure frame width multiple of 2 in case of 422 format
-        if ((vars->input_csp == 2) && (cdesc->param[FRM_IDX].w & 0x1)) {
+        if ((vars->input_csp == 2) && (cdesc->param[i].w & 0x1)) {
             logerr("%d-th frame's width should be a multiple of 2 for '--input-csp 2'\n", i);
             return -1;
         }
