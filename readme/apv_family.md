@@ -9,7 +9,7 @@ The choice of which APV family to use depends on factors like file size requirem
 
 # Description of APV family
 
-| Family       | Color Sampling | Usage |
+| Usage | Family | Color Sampling |
 |:-------------|:--------------:|:------:|
 | Finishing                                | APV 422 UQ | 4:2:2 | 
 |                                          | APV 444 UQ | 4:4:4 | 
