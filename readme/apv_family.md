@@ -10,11 +10,15 @@ The choice of which APV family to use depends on factors like file size requirem
 # Description of APV family
 
 | Family       | Color Sampling | Usage |
-|:------------:|:--------------:|:------|
-| APV 422 UQ   | 4:2:2          | Finishing |
-| APV 422 HQ   | 4:2:2          | High quality mezzanine |
-| APV 422 SQ   | 4:2:2          | Standard quality mezzanine |
-| APV 422 LQ   | 4:2:2          | Editing-friendly low-data-rate workflows |
+|:-------------|:--------------:|:------:|
+| Finishing                                | APV 422 UQ | 4:2:2 | 
+|                                          | APV 444 UQ | 4:4:4 | 
+| High quality mezzanine                   | APV 422 HQ | 4:2:2 | 
+|                                          | APV 444 HQ | 4:4:4 | 
+| Standard quality mezzanine               | APV 422 SQ | 4:2:2 | 
+|                                          | APV 444 SQ | 4:4:4 | 
+| Editing-friendly low-data-rate workflows | APV 422 LQ | 4:2:2 | 
+|                                          | APV 444 LQ | 4:4:4 | 
 
 
 ## Target bitrates of 4:2:2 color sampling
