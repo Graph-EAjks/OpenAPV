@@ -532,7 +532,6 @@ struct oapve_param {
     int           full_range_flag;
 };
 
-#define OAPV_CDESC_THREADS_AUTO          0
 /*****************************************************************************
  * automatic assignment of number of threads in creation of encoder & decoder
  *****************************************************************************/
@@ -549,6 +548,8 @@ struct oapve_cdesc {
     int           max_num_frms;
     // max number of threads (or OAPV_CDESC_THREADS_AUTO for auto-assignment)
     int           threads;
+    // flag to disable 'raw bitstream format'
+    int           disable_raw_bitstream_format;
     // encoding parameters
     oapve_param_t param[OAPV_MAX_NUM_FRAMES];
 };

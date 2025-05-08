@@ -62,7 +62,6 @@ int oapve_param_default(oapve_param_t *param)
     param->transfer_characteristics = 2; // unspecified transfer characteristics
     param->matrix_coefficients = 2; // unspecified matrix coefficients
     param->full_range_flag = 0; // limited range
-
     return OAPV_OK;
 }
 
