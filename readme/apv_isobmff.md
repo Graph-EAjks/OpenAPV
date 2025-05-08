@@ -63,7 +63,7 @@ aligned(8) class APVDecoderConfigurationBox extends FullBox('apvC',version=0, fl
 }
 ~~~~
 
-## APV Decoder Configuration Record {#APVDecoderConfigurationRecord}		
+## APV Decoder Configuration Record {#APVDecoderConfigurationRecord}
 
 The APVDecoderConfigurationRecord contains the information for initial configuration of a decoder which consumes the samples references the sample entry type of apv1. The information in this record is extracted from frame_header() of the bitstream stored in the track containing this record.
 
@@ -159,7 +159,7 @@ the full_range_flag field in the frame header of the frames whose value of the p
 ## APV Sample Description
 
 ###	Format of sample
-When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sample shall contain one and only one access unit of APV coded data. The format of sample shall be same as the raw bitstream access unit, the length field of four bytes preceeding the access unit data, as defined in the section 12.1 of the Internet-Draft of APV [https://datatracker.ietf.org/doc/html/draft-lim-apv].
+When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sample shall contain one and only one access unit of APV coded data. The format of sample shall be same as the raw_bitstream_access_unit, the length field of four bytes preceeding the access unit data, as defined in the section 12.1 of [APV codec specification](#apv-codec).
 
 ###	Sync sample
 Every samples of APV bitstream shall be sync samples.
@@ -187,3 +187,9 @@ else {
 ~~~~
 
 tile_index for sub-samples based on tiles, this parameter indicates the tile index in raster order in a frame.
+
+# References
+
+<a name="apv-codec"></a>
++ APV codec
+> The IETF Internet-Draft of APV codec: https://datatracker.ietf.org/doc/html/draft-lim-apv.
