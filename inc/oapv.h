@@ -169,8 +169,7 @@ extern "C" {
  *****************************************************************************/
 /* The output from the encoder is compliant with raw_bitstream_access_unit */
 #define OAPV_CFG_VAL_AU_BS_FMT_RBAU     (0)
-/* The output from the encoder consists of access units that are not preceded
-   by an access unit size */
+/* The output from the encoder is the only AU without bitstream format */
 #define OAPV_CFG_VAL_AU_BS_FMT_NONE     (1)
 
 /*****************************************************************************
