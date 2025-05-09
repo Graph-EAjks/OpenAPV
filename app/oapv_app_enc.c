@@ -113,7 +113,11 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         ARGS_NO_KEY,  "profile", ARGS_VAL_TYPE_STRING, 0, NULL,
-        "profile string (422-10, 400-10, 422-12)"
+        "profile string\n"
+        "      - 422-10: YCbCr422 10bit (default)\n"
+        "      - 422-12; YCbCr422 10bit\n"
+        "      - 400-10: YCbCr400 (monochrome)\n"
+        "Note: Input video will be automatically converted to color and bit-depth defined in asssigned profile if needs"
     },
     {
         ARGS_NO_KEY,  "level", ARGS_VAL_TYPE_STRING, 0, NULL,
@@ -792,7 +796,7 @@ int main(int argc, const char **argv)
     memset(&ifrms, 0, sizeof(oapv_frm_t));
     memset(&rfrms, 0, sizeof(oapv_frm_t));
 
-    int codec_depth = (param->profile_idc == OAPV_PROFILE_422_10 || param->profile_idc == OAPV_PROFILE_400_10) ? 10 : 
+    int codec_depth = (param->profile_idc == OAPV_PROFILE_422_10 || param->profile_idc == OAPV_PROFILE_400_10) ? 10 :
                        param->profile_idc == OAPV_PROFILE_422_12 ? 12 : 0;
     if (codec_depth == 0) {
         logerr("invalid profile\n");

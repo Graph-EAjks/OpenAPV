@@ -31,11 +31,10 @@
 
 #include "oapv_def.h"
 
-static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block)
+static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd)
 {
     u8 *src, *dst;
     int i, sft_hor, sft_ver;
-    int bd = OAPV_CS_GET_BYTE_DEPTH(imgb->cs);
 
     if(c == 0) {
         sft_hor = sft_ver = 0;
@@ -1046,8 +1045,8 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapv_imgb_t *imgb_i, oapv_imgb_t *i
     }
 
     ctx->bit_depth = OAPV_CS_GET_BIT_DEPTH(imgb_i->cs);
-    oapv_assert_rv((ctx->bit_depth == 10 && ctx->param->profile_idc == OAPV_PROFILE_422_10) || 
-                   (ctx->bit_depth == 10 && ctx->param->profile_idc == OAPV_PROFILE_400_10) || 
+    oapv_assert_rv((ctx->bit_depth == 10 && ctx->param->profile_idc == OAPV_PROFILE_422_10) ||
+                   (ctx->bit_depth == 10 && ctx->param->profile_idc == OAPV_PROFILE_400_10) ||
                    (ctx->bit_depth == 12 && ctx->param->profile_idc == OAPV_PROFILE_422_12), OAPV_ERR_INVALID_ARGUMENT);
 
     if(OAPV_CS_GET_FORMAT(imgb_i->cs) == OAPV_CF_PLANAR2) {
@@ -1326,8 +1325,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         ctx->param = &ctx->cdesc.param[i];
         ret = enc_read_param(ctx, ctx->param);
         oapv_assert_rv(ret == OAPV_OK, ret);
-        oapv_assert_rv(ctx->param->profile_idc == OAPV_PROFILE_422_10 || 
-                       ctx->param->profile_idc == OAPV_PROFILE_400_10 || 
+        oapv_assert_rv(ctx->param->profile_idc == OAPV_PROFILE_422_10 ||
+                       ctx->param->profile_idc == OAPV_PROFILE_400_10 ||
                        ctx->param->profile_idc == OAPV_PROFILE_422_12, OAPV_ERR_UNSUPPORTED);
 
         // prepare for encoding a frame
