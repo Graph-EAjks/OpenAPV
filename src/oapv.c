@@ -104,7 +104,7 @@ static void imgb_to_block_p21x_uv(void *src, int blk_w, int blk_h, int s_src, in
     }
 }
 
-static void imgb_to_block_p2(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd)
+static void imgb_to_block_p21x(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd)
 {
     u16 *src, *dst;
     int  sft_hor, sft_ver, s_src;
@@ -1051,7 +1051,7 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapv_imgb_t *imgb_i, oapv_imgb_t *i
                    (ctx->bit_depth == 12 && ctx->param->profile_idc == OAPV_PROFILE_422_12), OAPV_ERR_INVALID_ARGUMENT);
 
     if(OAPV_CS_GET_FORMAT(imgb_i->cs) == OAPV_CF_PLANAR2) {
-        ctx->fn_imgb_to_blk_rc = imgb_to_block_p2;
+        ctx->fn_imgb_to_blk_rc = imgb_to_block_p21x;
 
         ctx->fn_imgb_to_blk[Y_C] = imgb_to_block_p21x_y;
         ctx->fn_imgb_to_blk[U_C] = imgb_to_block_p21x_uv;
