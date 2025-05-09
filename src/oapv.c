@@ -755,6 +755,7 @@ static int enc_ready(oapve_ctx_t *ctx)
 
     ctx->rc_param.alpha = OAPV_RC_ALPHA;
     ctx->rc_param.beta = OAPV_RC_BETA;
+    ctx->au_bs_fmt = OAPV_CFG_VAL_AU_BS_FMT_RBAU; // default: enable raw bitstream format
 
     return OAPV_OK;
 ERR:
@@ -1299,8 +1300,9 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
 {
     oapve_ctx_t *ctx;
     oapv_frm_t  *frm;
-    oapv_bs_t   *bs;
+    oapv_bs_t   *bs, bs_pbu_beg;
     int          i, ret;
+    u8          *bs_pos_pbu_beg, *bs_pos_au_beg;
 
     ctx = enc_id_to_ctx(eid);
     oapv_assert_rv(ctx != NULL && bitb->addr && bitb->bsize > 0, OAPV_ERR_INVALID_ARGUMENT);
@@ -1310,11 +1312,11 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     oapv_bsw_init(bs, bitb->addr, bitb->bsize, NULL);
     oapv_mset(stat, 0, sizeof(oapve_stat_t));
 
-    u8       *bs_pos_au_beg = oapv_bsw_sink(bs); // address syntax of au size
-    u8       *bs_pos_pbu_beg;
-    oapv_bs_t bs_pbu_beg;
-    oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
+    bs_pos_au_beg = oapv_bsw_sink(bs);
 
+    if(ctx->au_bs_fmt == OAPV_CFG_VAL_AU_BS_FMT_RBAU) {
+        oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
+    }
     oapv_bsw_write(bs, 0x61507631, 32); // signature ('aPv1')
 
     for(i = 0; i < ifrms->num_frms; i++) {
@@ -1390,8 +1392,10 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         }
     }
 
-    u32 au_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_au_beg) - 4 /* au_size */;
-    oapv_bsw_write_direct(bs_pos_au_beg, au_size, 32); /* u(32) */
+    if(ctx->au_bs_fmt == OAPV_CFG_VAL_AU_BS_FMT_RBAU) {
+        u32 au_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_au_beg) - 4;
+        oapv_bsw_write_direct(bs_pos_au_beg, au_size, 32);
+    }
 
     oapv_bsw_deinit(&ctx->bs); /* de-init BSW */
     stat->write = bsw_get_write_byte(&ctx->bs);
@@ -1438,6 +1442,12 @@ int oapve_config(oapve_t eid, int cfg, void *buf, int *size)
         oapv_assert_rv(*size == sizeof(int), OAPV_ERR_INVALID_ARGUMENT);
         ctx->use_frm_hash = (*((int *)buf)) ? 1 : 0;
         break;
+    case OAPV_CFG_SET_AU_BS_FMT:
+        oapv_assert_rv(*size == sizeof(int), OAPV_ERR_INVALID_ARGUMENT);
+        t0 = *((int *)buf);
+        oapv_assert_rv(t0 == OAPV_CFG_VAL_AU_BS_FMT_RBAU || t0 == OAPV_CFG_VAL_AU_BS_FMT_NONE, OAPV_ERR_INVALID_ARGUMENT);
+        ctx->au_bs_fmt = t0;
+        break;
     /* get config *******************************************************/
     case OAPV_CFG_GET_QP:
         oapv_assert_rv(*size == sizeof(int), OAPV_ERR_INVALID_ARGUMENT);
@@ -1462,6 +1472,10 @@ int oapve_config(oapve_t eid, int cfg, void *buf, int *size)
     case OAPV_CFG_GET_BPS:
         oapv_assert_rv(*size == sizeof(int), OAPV_ERR_INVALID_ARGUMENT);
         *((int *)buf) = ctx->param->bitrate;
+        break;
+    case OAPV_CFG_GET_AU_BS_FMT:
+        oapv_assert_rv(*size == sizeof(int), OAPV_ERR_INVALID_ARGUMENT);
+        *((int *)buf) = ctx->au_bs_fmt;
         break;
     default:
         oapv_trace("unknown config value (%d)\n", cfg);
