@@ -31,10 +31,11 @@
 
 #include "oapv_def.h"
 
-static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd)
+static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bit_depth)
 {
     u8 *src, *dst;
     int i, sft_hor, sft_ver;
+    int byte_depth = (bit_depth + 7) >> 3;
 
     if(c == 0) {
         sft_hor = sft_ver = 0;
@@ -45,14 +46,14 @@ static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, i
         sft_ver = get_chroma_sft_h(cfi);
     }
 
-    src = ((u8 *)imgb->a[c]) + ((y_l >> sft_ver) * imgb->s[c]) + ((x_l * bd) >> sft_hor);
+    src = ((u8 *)imgb->a[c]) + ((y_l >> sft_ver) * imgb->s[c]) + ((x_l * byte_depth) >> sft_hor);
     dst = (u8 *)block;
 
     for(i = 0; i < (h_l); i++) {
-        oapv_mcpy(dst, src, (w_l)*bd);
+        oapv_mcpy(dst, src, (w_l) * byte_depth);
 
         src += imgb->s[c];
-        dst += (w_l)*bd;
+        dst += (w_l) * byte_depth;
     }
 }
 
