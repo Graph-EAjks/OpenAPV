@@ -115,9 +115,10 @@ static const args_opt_t enc_args_opts[] = {
         ARGS_NO_KEY,  "profile", ARGS_VAL_TYPE_STRING, 0, NULL,
         "profile string\n"
         "      - 422-10: YCbCr422 10bit (default)\n"
-        "      - 422-12; YCbCr422 10bit\n"
-        "      - 400-10: YCbCr400 (monochrome)\n"
-        "Note: Input video will be automatically converted to color and bit-depth defined in asssigned profile if needs"
+        "      - 422-12; YCbCr422 12bit\n"
+        "      - 400-10: YCbCr400 (monochrome) 10bit\n"
+        "      Note: Color space and bit depth of input video will be converted\n"
+        "            automatically to support the given profile, if needs"
     },
     {
         ARGS_NO_KEY,  "level", ARGS_VAL_TYPE_STRING, 0, NULL,
@@ -159,7 +160,7 @@ static const args_opt_t enc_args_opts[] = {
     {
         ARGS_NO_KEY,  "bitrate", ARGS_VAL_TYPE_STRING, 0, NULL,
         "enable ABR rate control\n"
-        "      bitrate in terms of kilo-bits per second: Kbps(none,K,k), Mbps(M,m)\n"
+        "      bitrate in terms of kbits per second: Kbps(none,K,k), Mbps(M,m)\n"
         "      ex) 100 = 100K = 0.1M"
     },
     {

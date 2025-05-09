@@ -31,11 +31,11 @@
 
 #include "oapv_def.h"
 
-static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bit_depth)
+static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd)
 {
     u8 *src, *dst;
     int i, sft_hor, sft_ver;
-    int byte_depth = (bit_depth + 7) >> 3;
+    int byte_depth = (bd + 7) >> 3;
 
     if(c == 0) {
         sft_hor = sft_ver = 0;
@@ -47,7 +47,7 @@ static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, i
     }
 
     src = ((u8 *)imgb->a[c]) + ((y_l >> sft_ver) * imgb->s[c]) + ((x_l * byte_depth) >> sft_hor);
-    dst = (u8 *)block;
+    dst = (u8 *)blk;
 
     for(i = 0; i < (h_l); i++) {
         oapv_mcpy(dst, src, (w_l) * byte_depth);
@@ -57,9 +57,9 @@ static void imgb_to_block(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, i
     }
 }
 
-static void imgb_to_block_16(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bit_depth)
+static void imgb_to_block_16(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd)
 {
-    const int mid_val = (1 << (bit_depth - 1));
+    const int mid_val = (1 << (bd - 1));
     s16      *s = (s16 *)src;
     s16      *d = (s16 *)dst;
 
@@ -72,12 +72,12 @@ static void imgb_to_block_16(void *src, int blk_w, int blk_h, int s_src, int off
     }
 }
 
-static void imgb_to_block_p2_y(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bit_depth)
+static void imgb_to_block_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd)
 {
-    const int mid_val = (1 << (bit_depth - 1));
+    const int mid_val = (1 << (bd - 1));
     u16      *s = (s16 *)src;
     s16      *d = (s16 *)dst;
-    int       shift_pic_bits = 16 - bit_depth;
+    int       shift_pic_bits = 16 - bd;
 
     for(int h = 0; h < blk_h; h++) {
         for(int w = 0; w < blk_w; w++) {
@@ -88,12 +88,12 @@ static void imgb_to_block_p2_y(void *src, int blk_w, int blk_h, int s_src, int o
     }
 }
 
-static void imgb_to_block_p2_uv(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bit_depth)
+static void imgb_to_block_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd)
 {
-    const int mid_val = (1 << (bit_depth - 1));
+    const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)src + offset_src;
     s16      *d = (s16 *)dst;
-    int       shift_pic_bits = 16 - bit_depth;
+    int       shift_pic_bits = 16 - bd;
 
     for(int h = 0; h < blk_h; h++) {
         for(int w = 0; w < blk_w; w++) {
@@ -104,13 +104,13 @@ static void imgb_to_block_p2_uv(void *src, int blk_w, int blk_h, int s_src, int 
     }
 }
 
-static void imgb_to_block_p2(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bit_depth)
+static void imgb_to_block_p2(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd)
 {
     u16 *src, *dst;
     int  sft_hor, sft_ver, s_src;
     int  size_scale = 1;
     int  tc = c;
-    int  shift_pic_bits = 16 - bit_depth;
+    int  shift_pic_bits = 16 - bd;
 
     if(c == 0) {
         sft_hor = sft_ver = 0;
@@ -123,7 +123,7 @@ static void imgb_to_block_p2(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l
         tc = 1;
     }
 
-    s_src = imgb->s[tc] >> (bit_depth > 1 ? 1 : 0);
+    s_src = imgb->s[tc] >> (bd > 1 ? 1 : 0);
     src = ((u16 *)imgb->a[tc]) + ((y_l >> sft_ver) * s_src) + ((x_l * size_scale) >> sft_hor);
     dst = (u16 *)block;
 
@@ -136,10 +136,10 @@ static void imgb_to_block_p2(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l
     }
 }
 
-static void block_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bit_depth)
+static void block_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd)
 {
-    const int max_val = (1 << bit_depth) - 1;
-    const int mid_val = (1 << (bit_depth - 1));
+    const int max_val = (1 << bd) - 1;
+    const int mid_val = (1 << (bd - 1));
     s16      *s = (s16 *)src;
     u16      *d = (u16 *)dst;
 
@@ -152,13 +152,13 @@ static void block_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int off
     }
 }
 
-static void block_to_imgb_p2_y(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bit_depth)
+static void block_to_imgb_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd)
 {
-    const int max_val = (1 << bit_depth) - 1;
-    const int mid_val = (1 << (bit_depth - 1));
+    const int max_val = (1 << bd) - 1;
+    const int mid_val = (1 << (bd - 1));
     s16      *s = (s16 *)src;
     u16      *d = (u16 *)dst;
-    int       shift_pic_bits = 16 - bit_depth;
+    int       shift_pic_bits = 16 - bd;
 
     for(int h = 0; h < blk_h; h++) {
         for(int w = 0; w < blk_w; w++) {
@@ -169,12 +169,12 @@ static void block_to_imgb_p2_y(void *src, int blk_w, int blk_h, int s_src, int o
     }
 }
 
-static void block_to_imgb_p2_uv(void *src, int blk_w, int blk_h, int s_src, int x_pel, int s_dst, void *dst, int bit_depth)
+static void block_to_imgb_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int x_pel, int s_dst, void *dst, int bd)
 {
-    const int max_val = (1 << bit_depth) - 1;
-    const int mid_val = (1 << (bit_depth - 1));
+    const int max_val = (1 << bd) - 1;
+    const int mid_val = (1 << (bd - 1));
     s16      *s = (s16 *)src;
-    int       shift_pic_bits = 16 - bit_depth;
+    int       shift_pic_bits = 16 - bd;
 
     // x_pel is x-offset value from left boundary of picture in unit of pixel.
     // the 'dst' address has calculated by
@@ -1053,13 +1053,13 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapv_imgb_t *imgb_i, oapv_imgb_t *i
     if(OAPV_CS_GET_FORMAT(imgb_i->cs) == OAPV_CF_PLANAR2) {
         ctx->fn_imgb_to_blk_rc = imgb_to_block_p2;
 
-        ctx->fn_imgb_to_blk[Y_C] = imgb_to_block_p2_y;
-        ctx->fn_imgb_to_blk[U_C] = imgb_to_block_p2_uv;
-        ctx->fn_imgb_to_blk[V_C] = imgb_to_block_p2_uv;
+        ctx->fn_imgb_to_blk[Y_C] = imgb_to_block_p21x_y;
+        ctx->fn_imgb_to_blk[U_C] = imgb_to_block_p21x_uv;
+        ctx->fn_imgb_to_blk[V_C] = imgb_to_block_p21x_uv;
 
-        ctx->fn_blk_to_imgb[Y_C] = block_to_imgb_p2_y;
-        ctx->fn_blk_to_imgb[U_C] = block_to_imgb_p2_uv;
-        ctx->fn_blk_to_imgb[V_C] = block_to_imgb_p2_uv;
+        ctx->fn_blk_to_imgb[Y_C] = block_to_imgb_p21x_y;
+        ctx->fn_blk_to_imgb[U_C] = block_to_imgb_p21x_uv;
+        ctx->fn_blk_to_imgb[V_C] = block_to_imgb_p21x_uv;
         ctx->fn_img_pad = enc_img_pad_p210;
     }
     else {
@@ -1586,9 +1586,9 @@ static int dec_frm_prepare(oapvd_ctx_t *ctx, oapv_imgb_t *imgb)
     ctx->h = oapv_align_value(ctx->fh.fi.frame_height, OAPV_MB_H);
 
     if(OAPV_CS_GET_FORMAT(imgb->cs) == OAPV_CF_PLANAR2) {
-        ctx->fn_block_to_imgb[Y_C] = block_to_imgb_p2_y;
-        ctx->fn_block_to_imgb[U_C] = block_to_imgb_p2_uv;
-        ctx->fn_block_to_imgb[V_C] = block_to_imgb_p2_uv;
+        ctx->fn_block_to_imgb[Y_C] = block_to_imgb_p21x_y;
+        ctx->fn_block_to_imgb[U_C] = block_to_imgb_p21x_uv;
+        ctx->fn_block_to_imgb[V_C] = block_to_imgb_p21x_uv;
     }
     else {
         for(int c = 0; c < ctx->num_comp; c++) {
