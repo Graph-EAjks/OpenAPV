@@ -75,7 +75,7 @@ static const args_opt_t dec_args_opts[] = {
     },
     {
         'd',  "output-depth", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "output bit depth (8, 10) "
+        "output bit depth (8, 10, 12) "
     },
     {
         ARGS_NO_KEY,  "hash", ARGS_VAL_TYPE_NONE, 0, NULL,
@@ -580,7 +580,7 @@ int main(int argc, const char **argv)
         for(i = 0; i < ofrms.num_frms; i++) {
             frm = &ofrms.frm[i];
             if(ofrms.num_frms > 0) {
-                if(OAPV_CS_GET_BIT_DEPTH(frm->imgb->cs) != args_var->output_depth) {
+                if(OAPV_CS_GET_BIT_DEPTH(frm->imgb->cs) != args_var->output_depth && args_var->output_csp != 1) {
                     if(imgb_w == NULL) {
                         imgb_w = imgb_create(frm->imgb->w[0], frm->imgb->h[0],
                                              OAPV_CS_SET(OAPV_CS_GET_FORMAT(frm->imgb->cs), args_var->output_depth, 0));

@@ -197,6 +197,7 @@ extern "C" {
  * profiles
  *****************************************************************************/
 #define OAPV_PROFILE_422_10             (33)
+#define OAPV_PROFILE_422_12             (44)
 #define OAPV_PROFILE_400_10             (99)
 
 /*****************************************************************************
@@ -396,6 +397,7 @@ struct oapv_dict_str_int {
 static const oapv_dict_str_int_t oapv_param_opts_profile[] = {
     {"422-10", OAPV_PROFILE_422_10},
     {"400-10", OAPV_PROFILE_400_10},
+    {"422-12", OAPV_PROFILE_422_12},
     {"", 0} // termination
 };
 
