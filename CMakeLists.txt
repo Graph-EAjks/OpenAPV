@@ -7,11 +7,11 @@ cmake_minimum_required (VERSION 3.12)
 # Set project version from git tag or version.txt file
 function(get_versions versionstring VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
     string(REGEX REPLACE "^([vV])([0-9]*)([.][0-9]*[.][0-9]*-?.*)$" "\\2" numbers ${versionstring})
-    set(VERSION_MAJOR ${numbers} PARENT_SCOPE)
+    set(${VERSION_MAJOR} ${numbers} PARENT_SCOPE)
     string(REGEX REPLACE "^([vV][0-9]*[.])([0-9]*)([.][0-9]*-?.*)$" "\\2" numbers ${versionstring})
-    set(VERSION_MINOR ${numbers} PARENT_SCOPE)
+    set(${VERSION_MINOR} ${numbers} PARENT_SCOPE)
     string(REGEX REPLACE "^([vV][0-9]*[.][0-9]*[.])([0-9]*)(-?.*)$" "\\2" numbers ${versionstring})
-    set(VERSION_PATCH ${numbers} PARENT_SCOPE)
+    set(${VERSION_PATCH} ${numbers} PARENT_SCOPE)
 endfunction()
 
 execute_process(
@@ -54,7 +54,29 @@ get_versions(${VERSION_STRING} VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
 if(VERSION_MAJOR STREQUAL ${VERSION_STRING})
   message(FATAL_ERROR "Version string parsing error")
 endif()
-message("OAPV VERSION=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+message("OAPV project version: ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/library_version.txt")
+message(FATAL_ERROR
+    "library_version.txt file doesn't exist!\n"
+    "You must provide \"${CMAKE_SOURCE_DIR}/library_version.txt\" file containing a valid library version string.\n"
+    "The library version string provided to library_version.txt must match the following format:\n\tv[VERSION_MAJOR].[VERSION_MINOR].[VERSION_PATCH]\n"
+    "To get the information on version of the downloaded library please follow the link below:\n\t https://github.com/AcademySoftwareFoundation/openapv"
+    )
+endif()
+
+message("Library version string has been taken from library_version.txt file.")
+file(STRINGS "library_version.txt" LIB_VERSION_STRING)
+
+if(NOT ${LIB_VERSION_STRING} MATCHES "^([vV])([0-9]*)([.][0-9]*[.][0-9]*-?.*)$")
+message(FATAL_ERROR "Library version string ${LIB_VERSION_STRING} doesn't match required format v[VERSION_MAJOR].[VERSION_MINOR].[VERSION_PATCH]")
+endif()
+
+get_versions(${LIB_VERSION_STRING} LIB_VERSION_MAJOR LIB_VERSION_MINOR LIB_VERSION_PATCH)
+if(LIB_VERSION_MAJOR STREQUAL ${LIB_VERSION_STRING})
+message(FATAL_ERROR "Version string parsing error")
+endif()
+message("OAPV library version: ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH}")
 
 project(OAPV VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} LANGUAGES C)
 
