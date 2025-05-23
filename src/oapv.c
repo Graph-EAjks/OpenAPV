@@ -2153,5 +2153,26 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 #endif // ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
 
+#if defined(OAPV_VERSION_HEADER)
+
+char * oapv_version() { 
+    static char oapv_ver[64];
+    snprintf(oapv_ver, sizeof(oapv_ver), "%d.%d.%d", OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
+    return oapv_ver; 
+}
+
+char * oapv_libversion() { 
+    static char oapv_libver[64];
+    snprintf(oapv_libver, sizeof(oapv_libver), "%d.%d.%d", OAPV_LIB_VERSION_MAJOR, OAPV_LIB_VERSION_MINOR, OAPV_LIB_VERSION_PATCH);
+    return oapv_libver; 
+}
+
+#else
+
 static char *oapv_ver = "0.1.13.1";
+static char *oapv_libver = "0.1.13.1";
+
 char * oapv_version() { return oapv_ver; }
+char * oapv_libversion() { return oapv_libver; }
+
+#endif
