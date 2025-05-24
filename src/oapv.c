@@ -2170,7 +2170,7 @@ char * oapv_libversion() {
 #else
 
 static char *oapv_ver = "0.1.13.1";
-static char *oapv_libver = "0.1.13.1";
+static char *oapv_libver = "1.0.0";
 
 char * oapv_version() { return oapv_ver; }
 char * oapv_libversion() { return oapv_libver; }
