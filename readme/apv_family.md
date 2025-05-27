@@ -22,7 +22,7 @@ The choice of which APV family to use depends on factors like file size requirem
 Following table is the typical bitrates of APV family.
 Actual compressed bitrate may have about 10% variations according to complexity of video signal.
 
-|Resolution | Frame Rate | APV 422 LQ | | APV 422 SQ | | APV 422 HQ | | APV 444 HQ | |
+|Resolution | Frame Rate | APV 422 LQ | | APV 422 SQ | | APV 422 HQ | | APV 444 UQ | |
 |:---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | |  | Mb/s | GB/h | Mb/s | GB/h | Mb/s | GB/h | Mb/s | GB/h|
 |qHD     960x540 | 24p | 29 | 13 | 40 | 18 | 56 | 25 | 84 | 38|
