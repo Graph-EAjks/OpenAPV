@@ -48,6 +48,24 @@ extern "C" {
 #define OAPV_EXPORT
 #endif
 
+/* macro for version */
+
+#define OAPV_GET_VERSION(major, minor, patch) ((major << 16) | (minor << 8) | patch)
+
+#define OAPV_GET_MAJOR(v) (((v) >> 16) & 0xFF)
+#define OAPV_GET_MINOR(v) (((v) >>  8) & 0xFF)
+#define OAPV_GET_PATCH(v) ( (v)        & 0xFF)
+
+#define OAPV_VERSION_2_STRING(version) \
+    ({ \
+        static char buffer[16]; \
+        snprintf(buffer, sizeof(buffer), "%d.%d.%d", \
+            (version >> 16) & 0xFF, \
+            (version >> 8) & 0xFF, \
+            version & 0xFF); \
+        buffer; \
+    })
+
 /* size of macroblock */
 #define OAPV_LOG2_MB                    (4)
 #define OAPV_LOG2_MB_W                  (4)
@@ -664,12 +682,12 @@ OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
 /*****************************************************************************
  * openapv project version
  *****************************************************************************/
-OAPV_EXPORT char *oapv_version();
+OAPV_EXPORT unsigned oapv_version();
 
 /*****************************************************************************
  * openapv library version
  *****************************************************************************/
-OAPV_EXPORT char *oapv_libversion();
+OAPV_EXPORT unsigned oapv_libversion();
 
 
 #ifdef __cplusplus

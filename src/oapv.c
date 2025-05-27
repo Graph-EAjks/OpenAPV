@@ -2155,24 +2155,22 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 
 #if defined(OAPV_VERSION_HEADER)
 
-char * oapv_version() { 
-    static char oapv_ver[64];
-    snprintf(oapv_ver, sizeof(oapv_ver), "%d.%d.%d", OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
-    return oapv_ver; 
+unsigned oapv_version(void) {
+    return OAPV_GET_VERSION(OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
 }
 
-char * oapv_libversion() { 
-    static char oapv_libver[64];
-    snprintf(oapv_libver, sizeof(oapv_libver), "%d.%d.%d", OAPV_LIB_VERSION_MAJOR, OAPV_LIB_VERSION_MINOR, OAPV_LIB_VERSION_PATCH);
-    return oapv_libver; 
+unsigned oapv_libversion(void) {
+    return OAPV_GET_VERSION(OAPV_LIB_VERSION_MAJOR, OAPV_LIB_VERSION_MINOR, OAPV_LIB_VERSION_PATCH);
 }
 
 #else
 
-static char *oapv_ver = "0.1.13.1";
-static char *oapv_libver = "1.0.0";
+unsigned oapv_version() { 
+    return OAPV_GET_VERSION(0, 1, 13);
+}
 
-char * oapv_version() { return oapv_ver; }
-char * oapv_libversion() { return oapv_libver; }
+unsigned oapv_libversion() { 
+    return OAPV_GET_VERSION(1, 0, 0);
+}
 
 #endif
