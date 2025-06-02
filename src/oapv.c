@@ -2153,24 +2153,16 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 #endif // ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(OAPV_VERSION_HEADER)
+#if defined(ANDROID)
 
-unsigned oapv_version(void) {
-    return OAPV_GET_VERSION(OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
-}
-
-unsigned oapv_libversion(void) {
-    return OAPV_GET_VERSION(OAPV_LIB_VERSION_MAJOR, OAPV_LIB_VERSION_MINOR, OAPV_LIB_VERSION_PATCH);
+unsigned int oapv_version() { 
+    return OAPV_GET_VERSION(0, 1, 13, 1);
 }
 
 #else
 
-unsigned oapv_version() { 
-    return OAPV_GET_VERSION(0, 1, 13);
-}
-
-unsigned oapv_libversion() { 
-    return OAPV_GET_VERSION(1, 0, 0);
+unsigned int oapv_version(void) {
+    return OAPV_GET_VERSION(OAPV_VERSION_APISET, OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
 }
 
 #endif

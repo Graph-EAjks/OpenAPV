@@ -18,10 +18,6 @@ list(APPEND LIB_INC "${LIB_VERSION_HEADER}")
 include(GenerateExportHeader)
 include_directories("${CMAKE_BINARY_DIR}/include")
 
-set(LIB_CONFIG_HEADER "${CMAKE_SOURCE_DIR}/inc/${LIB_NAME_BASE}_config.h")
-configure_file("${CMAKE_SOURCE_DIR}/inc/${LIB_NAME_BASE}_config.h.in" "${LIB_CONFIG_HEADER}" @ONLY)
-list(APPEND LIB_INC "${LIB_CONFIG_HEADER}")
-
 
 message("SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}")
 
@@ -63,7 +59,7 @@ endif()
 
 if(OAPV_BUILD_SHARED_LIB)
   add_library(${LIB_NAME_BASE}_dynamic SHARED ${SOURCE_FILES})
-  set_target_properties(${LIB_NAME_BASE}_dynamic PROPERTIES VERSION ${LIB_VERSION_MAJOR}.${LIB_VERSION_MINOR}.${LIB_VERSION_PATCH} SOVERSION ${LIB_VERSION_MAJOR})
+  set_target_properties(${LIB_NAME_BASE}_dynamic PROPERTIES VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR})
   set_target_properties(${LIB_NAME_BASE}_dynamic PROPERTIES OUTPUT_NAME ${LIB_NAME_BASE})
 
   # @todo Consider using WINDOWS_EXPORT_ALL_SYMBOLS instead of generate_export_header

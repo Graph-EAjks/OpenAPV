@@ -38,19 +38,16 @@
 #endif
 #undef OAPV_BUILD_SHARED_LIB
 
-// Library version
-#define OAPV_LIB_VERSION_MAJOR @LIB_VERSION_MAJOR@
-#define OAPV_LIB_VERSION_MINOR @LIB_VERSION_MINOR@
-#define OAPV_LIB_VERSION_PATCH @LIB_VERSION_PATCH@
-
-#define OAPV_CHECK_LIB_VERSION(major, minor, patch)                            \
-    ((major) < OAPV_LIB_VERSION_MAJOR ||                                       \
-    ((major) == OAPV_LIB_VERSION_MAJOR && (minor) < OAPV_LIB_VERSION_MINOR) || \
-    ((major) == OAPV_LIB_VERSION_MAJOR && (minor) == OAPV_LIB_VERSION_MINOR && (patch) <= OAPV_LIB_VERSION_PATCH))
-
 // Project version
-#define OAPV_VERSION_MAJOR @VERSION_MAJOR@
-#define OAPV_VERSION_MINOR @VERSION_MINOR@
-#define OAPV_VERSION_PATCH @VERSION_PATCH@
+#define OAPV_VERSION_APISET 0
+#define OAPV_VERSION_MAJOR  @VERSION_MAJOR@
+#define OAPV_VERSION_MINOR  @VERSION_MINOR@
+#define OAPV_VERSION_PATCH  @VERSION_PATCH@
+
+#define OAPV_CHECK_VERSION(apiset, major, minor, patch)                      \
+    ((apiset) < OAPV_VERSION_APISET || \
+    ((apiset) == OAPV_VERSION_APISET && (major) < OAPV_VERSION_MAJOR) || \
+    ((apiset) == OAPV_VERSION_APISET && (major) == OAPV_VERSION_MAJOR && (minor) < OAPV_VERSION_MINOR) || \
+    ((apiset) == OAPV_VERSION_APISET && (major) == OAPV_VERSION_MAJOR && (minor) == OAPV_VERSION_MINOR && (patch) <= OAPV_VERSION_PATCH)) 
 
 #endif /* __OAPV_VERSION_H__8465216516551324987461894651851187416502317561968__ */

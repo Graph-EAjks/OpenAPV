@@ -36,30 +36,29 @@
 extern "C" {
 #endif
 
-#include <oapv_config.h>
-
-#if defined(OAPV_VERSION_HEADER)
-#include <oapv/oapv_version.h>
-#endif
-
-#if defined(OAPV_EXPORT_HEADER) && !defined(OAPV_STATIC_DEFINE)
-#include <oapv/oapv_exports.h>
+#if defined(ANDROID) || defined(OAPV_STATIC_DEFINE)
+    #define OAPV_EXPORT
 #else
-#define OAPV_EXPORT
+    #include <oapv/oapv_exports.h>
+#endif
+    
+#if !defined(ANDROID)    
+    #include <oapv/oapv_version.h>
 #endif
 
 /* macro for version */
+#define OAPV_GET_VERSION(apiset, major, minor, patch) ((apiset << 24) | (major << 16) | (minor << 8) | patch)
 
-#define OAPV_GET_VERSION(major, minor, patch) ((major << 16) | (minor << 8) | patch)
-
-#define OAPV_GET_MAJOR(v) (((v) >> 16) & 0xFF)
-#define OAPV_GET_MINOR(v) (((v) >>  8) & 0xFF)
-#define OAPV_GET_PATCH(v) ( (v)        & 0xFF)
+#define OAPV_GET_APISET(v) (((v) >> 24) & 0xFF)
+#define OAPV_GET_MAJOR(v)  (((v) >> 16) & 0xFF)
+#define OAPV_GET_MINOR(v)  (((v) >>  8) & 0xFF)
+#define OAPV_GET_PATCH(v)  ( (v)        & 0xFF)
 
 #define OAPV_VERSION_2_STRING(version) \
     ({ \
         static char buffer[16]; \
-        snprintf(buffer, sizeof(buffer), "%d.%d.%d", \
+        snprintf(buffer, sizeof(buffer), "%d.%d.%d.%d", \
+            (version >> 24) & 0xFF, \
             (version >> 16) & 0xFF, \
             (version >> 8) & 0xFF, \
             version & 0xFF); \
