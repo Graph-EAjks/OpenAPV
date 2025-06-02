@@ -2155,7 +2155,12 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 
 #if defined(ANDROID)
 
-unsigned int oapv_version() { 
+unsigned int oapv_version() {
+    // For Android, the library version is hardcoded,
+    // because the configuration process does not generate the oapv_version.h
+    // header file containing the definitions for OAPV_VERSION_APISET,
+    // OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, and OAPV_VERSION_PATCH
+    // that specify the version numbers.
     return OAPV_GET_VERSION(0, 1, 13, 1);
 }
 
