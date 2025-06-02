@@ -58,17 +58,6 @@ if(VERSION_MAJOR STREQUAL ${VERSION_STRING})
 endif()
 message("OAPV project version: ${VERSION_APISET}.${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-# if(NOT EXISTS "${CMAKE_SOURCE_DIR}/library_version.txt")
-# message(FATAL_ERROR
-#     "library_version.txt file doesn't exist!\n"
-#     "You must provide \"${CMAKE_SOURCE_DIR}/library_version.txt\" file containing a valid library version string.\n"
-#     "The library version string provided to library_version.txt must match the following format:\n\tv[VERSION_APISET].[VERSION_MAJOR].[VERSION_MINOR].[VERSION_PATCH]\n"
-#     "To get the information on version of the downloaded library please follow the link below:\n\t https://github.com/AcademySoftwareFoundation/openapv"
-#     )
-# endif()
-
-# message("Library version string has been taken from library_version.txt file.")
-# file(STRINGS "library_version.txt" LIB_VERSION_STRING)
 
 project(OAPV VERSION ${VERSION_APISET}.${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} LANGUAGES C)
 
