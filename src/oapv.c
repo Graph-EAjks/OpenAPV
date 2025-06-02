@@ -2166,7 +2166,7 @@ unsigned int oapv_version() {
 
 #else
 
-unsigned int oapv_version(void) {
+unsigned int oapv_version() {
     return OAPV_GET_VERSION(OAPV_VERSION_APISET, OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
 }
 

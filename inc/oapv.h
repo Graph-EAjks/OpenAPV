@@ -679,15 +679,9 @@ OAPV_EXPORT int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms,
 OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
 
 /*****************************************************************************
- * openapv project version
+ * openapv version
  *****************************************************************************/
-OAPV_EXPORT unsigned oapv_version();
-
-/*****************************************************************************
- * openapv library version
- *****************************************************************************/
-OAPV_EXPORT unsigned oapv_libversion();
-
+OAPV_EXPORT unsigned int oapv_version();
 
 #ifdef __cplusplus
 } /* extern "C" */
