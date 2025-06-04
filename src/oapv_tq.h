@@ -39,9 +39,10 @@
 #if ENABLE_ENCODER
 ///////////////////////////////////////////////////////////////////////////////
 
-extern const oapv_fn_tx_t    oapv_tbl_fn_tx[2];
-extern const oapv_fn_quant_t oapv_tbl_fn_quant[2];
-extern const int             oapv_quant_scale[6];
+extern const oapv_fn_tx_t       oapv_tbl_fn_tx[2];
+extern const oapv_fn_tx_part_t  oapv_tbl_fn_tx_part[2];
+extern const oapv_fn_quant_t    oapv_tbl_fn_quant[2];
+extern const int                oapv_quant_scale[6];
 
 void oapv_trans(oapve_ctx_t *ctx, s16 *coef, int log2_w, int log2_h, int bit_depth);
 void oapv_itx_get_wo_sft(s16 *src, s16 *dst, s32 *dst32, int shift, int line);
