@@ -789,16 +789,4 @@ static unsigned char char_to_hex(char a)
     return ret;
 }
 
-/* get version string */
-char * ver_num_2_ver_str(unsigned int ver_num)
-{
-    static char oapv_app_ver_str[16];
-    snprintf(oapv_app_ver_str, sizeof(oapv_app_ver_str), "%d.%d.%d.%d",
-        OAPV_VER_GET_APISET(ver_num),
-        OAPV_VER_GET_MAJOR(ver_num),
-        OAPV_VER_GET_MINOR(ver_num),
-        OAPV_VER_GET_PATCH(ver_num));
-    return (char*)oapv_app_ver_str;
-}
-
 #endif /* _OAPV_APP_UTIL_H_ */

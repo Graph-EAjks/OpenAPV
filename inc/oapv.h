@@ -46,8 +46,10 @@ extern "C" {
     #include <oapv/oapv_version.h>
 #endif
 
-/* macro for version */
-/* the version string follows the rule of API_SET.MAJOR.MINOR.PATCH */
+/*****************************************************************************
+ * version and related macro
+ * the version string follows the rule of API_SET.MAJOR.MINOR.PATCH
+ *****************************************************************************/
 #define OAPV_VER_SET(apiset, major, minor, patch) \
     (((apiset & 0xFF) << 24)|((major & 0xFF) << 16)|((minor & 0xFF) << 8)|\
     (patch & 0xFF))
@@ -55,6 +57,16 @@ extern "C" {
 #define OAPV_VER_GET_MAJOR(v)           (((v) >> 16) & 0xFF)
 #define OAPV_VER_GET_MINOR(v)           (((v) >>  8) & 0xFF)
 #define OAPV_VER_GET_PATCH(v)           (((v) >>  0) & 0xFF)
+
+/* version numbers (should be changed in case of new release) */
+#define OAPV_VER_APISET                 (0)
+#define OAPV_VER_MAJOR                  (1)
+#define OAPV_VER_MINOR                  (13)
+#define OAPV_VER_PATCH                  (1)
+
+/* 4-bytes version number */
+#define OAPV_VER_NUM \
+    OAPV_VER_SET(OAPV_VER_APISET,OAPV_VER_MAJOR,OAPV_VER_MINOR,OAPV_VER_PATCH)
 
 /* size of macroblock */
 #define OAPV_LOG2_MB                    (4)
@@ -672,7 +684,7 @@ OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
 /*****************************************************************************
  * openapv version
  *****************************************************************************/
-OAPV_EXPORT unsigned int oapv_version();
+OAPV_EXPORT char *oapv_version(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
