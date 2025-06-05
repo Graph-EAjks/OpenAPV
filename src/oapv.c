@@ -2153,21 +2153,22 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 #endif // ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
 
-#if defined(ANDROID)
-
 unsigned int oapv_version() {
+#if defined(ANDROID)
     // For Android, the library version is hardcoded,
     // because the configuration process does not generate the oapv_version.h
     // header file containing the definitions for OAPV_VERSION_APISET,
     // OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, and OAPV_VERSION_PATCH
     // that specify the version numbers.
-    return OAPV_GET_VERSION(0, 1, 13, 1);
-}
-
+    const int OAPV_VERSION_APISET = 0;
+    const int OAPV_VERSION_MAJOR  = 1;
+    const int OAPV_VERSION_MINOR  = 13;
+    const int OAPV_VERSION_PATCH  = 1;
 #else
-
-unsigned int oapv_version() {
-    return OAPV_GET_VERSION(OAPV_VERSION_APISET, OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
-}
-
+#if !defined(OAPV_VERSION_APISET) || !defined(OAPV_VERSION_MAJOR) || \
+    !defined(OAPV_VERSION_MINOR) || !defined(OAPV_VERSION_PATCH)
+    #pragma message("Error: version numbers are not defined!")
 #endif
+#endif
+    return OAPV_VER_SET(OAPV_VERSION_APISET, OAPV_VERSION_MAJOR, OAPV_VERSION_MINOR, OAPV_VERSION_PATCH);
+}

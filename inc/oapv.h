@@ -41,29 +41,20 @@ extern "C" {
 #else
     #include <oapv/oapv_exports.h>
 #endif
-    
-#if !defined(ANDROID)    
+
+#if !defined(ANDROID)
     #include <oapv/oapv_version.h>
 #endif
 
 /* macro for version */
-#define OAPV_GET_VERSION(apiset, major, minor, patch) ((apiset << 24) | (major << 16) | (minor << 8) | patch)
-
-#define OAPV_GET_APISET(v) (((v) >> 24) & 0xFF)
-#define OAPV_GET_MAJOR(v)  (((v) >> 16) & 0xFF)
-#define OAPV_GET_MINOR(v)  (((v) >>  8) & 0xFF)
-#define OAPV_GET_PATCH(v)  ( (v)        & 0xFF)
-
-#define OAPV_VERSION_2_STRING(version) \
-    ({ \
-        static char buffer[16]; \
-        snprintf(buffer, sizeof(buffer), "%d.%d.%d.%d", \
-            (version >> 24) & 0xFF, \
-            (version >> 16) & 0xFF, \
-            (version >> 8) & 0xFF, \
-            version & 0xFF); \
-        buffer; \
-    })
+/* the version string follows the rule of API_SET.MAJOR.MINOR.PATCH */
+#define OAPV_VER_SET(apiset, major, minor, patch) \
+    (((apiset & 0xFF) << 24)|((major & 0xFF) << 16)|((minor & 0xFF) << 8)|\
+    (patch & 0xFF))
+#define OAPV_VER_GET_APISET(v)          (((v) >> 24) & 0xFF)
+#define OAPV_VER_GET_MAJOR(v)           (((v) >> 16) & 0xFF)
+#define OAPV_VER_GET_MINOR(v)           (((v) >>  8) & 0xFF)
+#define OAPV_VER_GET_PATCH(v)           (((v) >>  0) & 0xFF)
 
 /* size of macroblock */
 #define OAPV_LOG2_MB                    (4)
