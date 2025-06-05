@@ -2153,7 +2153,7 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
 #endif // ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
 
-char *oapv_version(void)
+const char *oapv_version(void)
 {
     static char oapv_version_string[16];
     snprintf(oapv_version_string, sizeof(oapv_version_string), "%d.%d.%d.%d",

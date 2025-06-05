@@ -42,10 +42,6 @@ extern "C" {
     #include <oapv/oapv_exports.h>
 #endif
 
-#if !defined(ANDROID)
-    #include <oapv/oapv_version.h>
-#endif
-
 /*****************************************************************************
  * version and related macro
  * the version string follows the rule of API_SET.MAJOR.MINOR.PATCH
@@ -684,7 +680,7 @@ OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
 /*****************************************************************************
  * openapv version
  *****************************************************************************/
-OAPV_EXPORT char *oapv_version(void);
+OAPV_EXPORT const char *oapv_version(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
