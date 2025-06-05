@@ -4,60 +4,56 @@ cmake_minimum_required (VERSION 3.12)
 # Project versioning
 ########################################
 
-# Set project version from git tag or version.txt file
-function(get_versions versionstring VERSION_APISET VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
-    string(REGEX REPLACE "^([vV])([0-9]+)([.])([0-9]+)([.])([0-9]+)([.])([0-9]+)$" "\\2" numbers ${versionstring})
-    set(${VERSION_APISET} ${numbers} PARENT_SCOPE)
-    string(REGEX REPLACE "^([vV])([0-9]+)([.])([0-9]+)([.])([0-9]+)([.])([0-9]+)$" "\\4" numbers ${versionstring})
-    set(${VERSION_MAJOR} ${numbers} PARENT_SCOPE)
-    string(REGEX REPLACE "^([vV])([0-9]+)([.])([0-9]+)([.])([0-9]+)([.])([0-9]+)$" "\\6" numbers ${versionstring})
-    set(${VERSION_MINOR} ${numbers} PARENT_SCOPE)
-    string(REGEX REPLACE "^([vV])([0-9]+)([.])([0-9]+)([.])([0-9]+)([.])([0-9]+)$" "\\8" numbers ${versionstring})
-    set(${VERSION_PATCH} ${numbers} PARENT_SCOPE)
-endfunction()
+set(OAPV_H_HEADER_FILE "${CMAKE_SOURCE_DIR}/inc/oapv.h")
 
-execute_process(
-    COMMAND git describe --match "v[0-9]*.[0-9]*.[0-9]*.[0-9]*" --abbrev=0 --tags
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    RESULT_VARIABLE RESULT
-    OUTPUT_VARIABLE OUTPUT)
+if(NOT EXISTS ${OAPV_H_HEADER_FILE})
+  message(FATAL_ERROR
+      "${CMAKE_SOURCE_DIR}/inc/oapv.h file doesn't exist!\n"
+      "File contains OAPV_VER_APISET, OAPV_VER_MAJOR, OAPV_VER_MINOR, OAPV_VER_PATCH definitions that specifie openAPV project version.\n"
+      "To get the information on version of the downloaded library please follow the link below:\n\t https://github.com/AcademySoftwareFoundation/openapv"
+      )
+endif()
 
-if(NOT RESULT EQUAL 0)
-  find_program(GIT_COMMAND "git")
-  if(GIT_COMMAND)
-    message(WARNING "There is no valid git repository in your working directory \"${CMAKE_SOURCE_DIR}\" .")
-  else()
-    message(WARNING "You have no git tool installed.")
-  endif()
+file(READ ${OAPV_H_HEADER_FILE} HEADER_CONTENT)
 
-  if(NOT EXISTS "${CMAKE_SOURCE_DIR}/version.txt")
-    message(FATAL_ERROR
-        "version.txt file doesn't exist!\n"
-        "Since your working directory doesn't contain a git repository you must provide \"${CMAKE_SOURCE_DIR}/version.txt\" file containing a valid version string.\n"
-        "The version string provided to version.txt must match the following format:\n\tv[VERSION_APISET].[VERSION_MAJOR].[VERSION_MINOR].[VERSION_PATCH]\n"
-        "To get the information on version of the downloaded library please follow the link below:\n\t https://github.com/AcademySoftwareFoundation/openapv"
-        )
-  endif()
+# Regular expressions for extracting versions
+string(REGEX MATCH "(#define)([ ]+)(OAPV_VER_APISET)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" APISET_MATCH ${HEADER_CONTENT})
+string(REGEX MATCH "(#define)([ ]+)(OAPV_VER_MAJOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" MAJOR_MATCH ${HEADER_CONTENT})
+string(REGEX MATCH "(#define)([ ]+)(OAPV_VER_MINOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" MINOR_MATCH ${HEADER_CONTENT})
+string(REGEX MATCH "(#define)([ ]+)(OAPV_VER_PATCH)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" PATCH_MATCH ${HEADER_CONTENT})
 
-  message("Version string has been taken from version.txt file.")
-  file(STRINGS "version.txt" VERSION_STRING)
-
+# Extract the values OAPV_VER_APISET, OAPV_VER_MAJOR, OAPV_VER_MINOR, OAPV_VER_PATCH from the oapv.h file
+if(APISET_MATCH)
+  string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_APISET)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_APISET ${APISET_MATCH})
 else()
-  message("Version string has been taken from git tag.")
-  set(VERSION_STRING ${OUTPUT})
-  string(REGEX REPLACE "\n$" "" VERSION_STRING "${VERSION_STRING}")
+  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_APISET (number).")
 endif()
 
-if(NOT ${VERSION_STRING} MATCHES "^([vV])([0-9]+)([.])([0-9]+)([.])([0-9]+)([.])([0-9]+)$")
-  message(FATAL_ERROR "Version string ${VERSION_STRING} doesn't match required format v[VERSION_APISET].[VERSION_MAJOR].[VERSION_MINOR].[VERSION_PATCH]")
+if(MAJOR_MATCH)
+  string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_MAJOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_MAJOR ${MAJOR_MATCH})
+else()
+  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MAJOR (number).")
 endif()
 
-get_versions(${VERSION_STRING} VERSION_APISET VERSION_MAJOR VERSION_MINOR VERSION_PATCH)
-if(VERSION_MAJOR STREQUAL ${VERSION_STRING})
-  message(FATAL_ERROR "Version string parsing error")
+if(MINOR_MATCH)
+    string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_MINOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_MINOR ${MINOR_MATCH})
+else()
+  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MINOR (number).")
 endif()
-message("OAPV version: ${VERSION_APISET}.${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
+if(PATCH_MATCH)
+    string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_PATCH)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_PATCH ${PATCH_MATCH})
+else()
+  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_PATCH (number).")
+endif()
+
+message(DEBUG "OAPV_VER_APISET: ${VERSION_APISET}")
+message(DEBUG "OAPV_VER_MAJOR: ${VERSION_MAJOR}")
+message(DEBUG "OAPV_VER_MINOR: ${VERSION_MINOR}")
+message(DEBUG "OAPV_VER_PATCH: ${VERSION_PATCH}")
+
+message(STATUS "OAPV version has been taken from ${OAPV_H_HEADER_FILE} file.")
+message(STATUS "OAPV version: ${VERSION_APISET}.${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 project(OAPV VERSION ${VERSION_APISET}.${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} LANGUAGES C)
 
