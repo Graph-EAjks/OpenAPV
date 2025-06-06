@@ -2160,8 +2160,3 @@ const char *oapv_version(void)
         OAPV_VER_APISET, OAPV_VER_MAJOR, OAPV_VER_MINOR, OAPV_VER_PATCH);
     return (char*)oapv_version_string;
 }
-
-unsigned int oapv_version_int(void)
-{
-    return OAPV_VER_SET(OAPV_VER_APISET, OAPV_VER_MAJOR, OAPV_VER_MINOR, OAPV_VER_PATCH);
-}

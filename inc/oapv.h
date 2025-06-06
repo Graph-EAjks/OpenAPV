@@ -681,7 +681,6 @@ OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
  * openapv version
  *****************************************************************************/
 OAPV_EXPORT const char *oapv_version(void);
-OAPV_EXPORT unsigned int oapv_version_int(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
