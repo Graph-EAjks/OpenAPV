@@ -174,7 +174,6 @@ typedef struct oapve_core oapve_core_t;
  *****************************************************************************/
 typedef void (*oapv_fn_itx_part_t)(s16 *coef, s16 *t, int shift, int line);
 typedef void (*oapv_fn_itx_t)(s16 *coef, int shift1, int shift2, int line);
-typedef void (*oapv_fn_tx_part_t)(s16 *coef, s16 *t, int shift, int line);
 typedef void (*oapv_fn_tx_t)(s16 *coef, int shift1, int shift2, int line);
 typedef void (*oapv_fn_itx_adj_t)(int *src, int *dst, int itrans_diff_idx, int diff_step, int shift);
 typedef int (*oapv_fn_quant_t)(s16 *coef, u8 qp, int q_matrix[OAPV_BLK_D], int log2_w, int log2_h, int bit_depth, int deadzone_offset);
@@ -296,7 +295,6 @@ struct oapve_ctx {
     const oapv_fn_itx_t      *fn_itx;
     const oapv_fn_itx_adj_t  *fn_itx_adj;
     const oapv_fn_tx_t       *fn_txb;
-    const oapv_fn_tx_part_t  *fn_txb_part;
     const oapv_fn_quant_t    *fn_quant;
     const oapv_fn_dquant_t   *fn_dquant;
     const oapv_fn_sad_t      *fn_sad;

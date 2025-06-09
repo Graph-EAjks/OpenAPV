@@ -70,12 +70,6 @@ static void oapv_tx_part(s16 *src, s16 *dst, int shift, int line)
     }
 }
 
-const oapv_fn_tx_part_t oapv_tbl_fn_tx_part[2] =
-{
-    oapv_tx_part,
-        NULL
-};
-
 static void oapv_tx(s16 *src, int shift1, int shift2, int line)
 {
     ALIGNED_16(s16 dst[OAPV_BLK_D]);
