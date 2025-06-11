@@ -1,4 +1,4 @@
-![OAPV](/readme/img/oapv_logo_black_bar_256.png)
+![OAPV](/readme/img/oapv_logo_black_bar_512.png)
 # OpenAPV (Open Advanced Professional Video Codec)
 
 [![Build and test](https://github.com/AcademySoftwareFoundation/openapv/actions/workflows/build.yml/badge.svg)](https://github.com/AcademySoftwareFoundation/openapv/actions/workflows/build.yml)
