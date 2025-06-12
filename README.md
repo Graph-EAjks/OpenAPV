@@ -127,5 +127,8 @@ Project and library is following one common version number.
 See [LICENSE](LICENSE) file for details.
 
 ## Graphic logo
-![OAPV](/readme/img/oapv_logo_bar_64.png) ![OAPV](/readme/img/oapv_logo_bar_128.png) ![OAPV](/readme/img/oapv_logo_bar_256.png)
-![OAPV](/readme/img/oapv_logo_btn_64.png) ![OAPV](/readme/img/oapv_logo_btn_96.png) ![OAPV](/readme/img/oapv_logo_btn_128.png)
+### logo for light mode
+![OAPV](/readme/img/oapv_logo_black_bar_64.png) ![OAPV](/readme/img/oapv_logo_black_bar_128.png) ![OAPV](/readme/img/oapv_logo_black_bar_256.png)
+
+### logo for dark mode
+![OAPV](/readme/img/oapv_logo_white_bar_64.png) ![OAPV](/readme/img/oapv_logo_white_bar_128.png) ![OAPV](/readme/img/oapv_logo_white_bar_256.png)
