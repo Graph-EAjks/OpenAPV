@@ -119,7 +119,7 @@ For generating package ready for distribution (default deb) execute in build dir
 
 ## Versioning
 
-This project is using folowing versioning scheme ``API-SET.MAJOR.MINOR.PATCH``. It's mostly based on Semantic Versioning with addition of API-SET on first place.
+This project is using folowing versioning scheme ``API-SET.MAJOR.MINOR.PATCH``. It's mostly based on Semantic Versioning with addition of ``API-SET`` on first place.
 Project and library is following one common version number.
 
 ## License
