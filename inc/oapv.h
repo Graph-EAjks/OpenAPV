@@ -109,6 +109,7 @@ extern "C" {
 #define OAPV_ERR_FAILED_SYSCALL         (-301) /* failed system call */
 #define OAPV_ERR_INVALID_LEVEL          (-401)
 #define OAPV_ERR_INVALID_WIDTH          (-405) /* invalid width (like odd) */
+#define OAPV_ERR_INVALID_FAMILY         (-501) /* invalid family number */
 #define OAPV_ERR_UNKNOWN                (-32767) /* unknown error */
 
 /* return value checking */
@@ -232,6 +233,15 @@ extern "C" {
 #define OAPV_PROFILE_422_10             (33)
 #define OAPV_PROFILE_422_12             (44)
 #define OAPV_PROFILE_400_10             (99)
+
+/*****************************************************************************
+ * family
+ *****************************************************************************/
+#define OAPV_FAMILY_UNDEFINED            (0)
+#define OAPV_FAMILY_422_LQ               (1)
+#define OAPV_FAMILY_422_SQ               (2)
+#define OAPV_FAMILY_422_HQ               (3)
+#define OAPV_FAMILY_444_HQ               (4)
 
 /*****************************************************************************
  * optimization level control
@@ -429,8 +439,8 @@ struct oapv_dict_str_int {
 
 static const oapv_dict_str_int_t oapv_param_opts_profile[] = {
     {"422-10", OAPV_PROFILE_422_10},
-    {"400-10", OAPV_PROFILE_400_10},
     {"422-12", OAPV_PROFILE_422_12},
+    {"400-10", OAPV_PROFILE_400_10},
     {"", 0} // termination
 };
 
@@ -509,6 +519,19 @@ static const oapv_dict_str_int_t oapv_param_opts_color_matrix[] = {
     {"", 0} // termination
 };
 
+static const oapv_dict_str_int_t oapv_param_opts_family[] = {
+    {"undefined", OAPV_FAMILY_UNDEFINED},
+    {"422-LQ",    OAPV_FAMILY_422_LQ},
+    {"422LQ",     OAPV_FAMILY_422_LQ},
+    {"422-SQ",    OAPV_FAMILY_422_SQ},
+    {"422SQ",     OAPV_FAMILY_422_SQ},
+    {"422-HQ",    OAPV_FAMILY_422_HQ},
+    {"422HQ",     OAPV_FAMILY_422_HQ},
+    {"444-HQ",    OAPV_FAMILY_444_HQ},
+    {"444HQ",     OAPV_FAMILY_444_HQ},
+    {"", 0} // termination
+};
+
 /*****************************************************************************
  * coding parameters
  *****************************************************************************/
@@ -546,6 +569,8 @@ struct oapve_param {
     signed char   qp_offset_c3;
     /* bitrate (unit: kbps) */
     int           bitrate;
+    /* family */
+    int           family;
     /* use filler data for tight constant bitrate */
     int           use_filler;
     /* use quantization matrix */
