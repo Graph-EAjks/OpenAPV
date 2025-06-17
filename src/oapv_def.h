@@ -174,7 +174,7 @@ typedef struct oapve_core oapve_core_t;
  *****************************************************************************/
 typedef void (*oapv_fn_itx_part_t)(s16 *coef, s16 *t, int shift, int line);
 typedef void (*oapv_fn_itx_t)(s16 *coef, int shift1, int shift2, int line);
-typedef void (*oapv_fn_tx_t)(s16 *coef, s16 *t, int shift, int line);
+typedef void (*oapv_fn_tx_t)(s16 *coef, int shift1, int shift2, int line);
 typedef void (*oapv_fn_itx_adj_t)(int *src, int *dst, int itrans_diff_idx, int diff_step, int shift);
 typedef int (*oapv_fn_quant_t)(s16 *coef, u8 qp, int q_matrix[OAPV_BLK_D], int log2_w, int log2_h, int bit_depth, int deadzone_offset);
 typedef void (*oapv_fn_dquant_t)(s16 *coef, s16 q_matrix[OAPV_BLK_D], int log2_w, int log2_h, s8 shift);
@@ -183,9 +183,9 @@ typedef s64 (*oapv_fn_ssd_t)(int w, int h, void *src1, void *src2, int s_src1, i
 typedef void (*oapv_fn_diff_t)(int w, int h, void *src1, void *src2, int s_src1, int s_src2, int s_diff, s16 *diff);
 
 typedef double (*oapv_fn_enc_blk_cost_t)(oapve_ctx_t *ctx, oapve_core_t *core, int log2_w, int log2_h, int c);
-typedef void (*oapv_fn_imgb_to_blk_rc_t)(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block);
-typedef void (*oapv_fn_imgb_to_blk_t)(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst);
-typedef void (*oapv_fn_blk_to_imgb_t)(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst);
+typedef void (*oapv_fn_imgb_to_blk_rc_t)(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bit_depth);
+typedef void (*oapv_fn_imgb_to_blk_t)(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bit_depth);
+typedef void (*oapv_fn_blk_to_imgb_t)(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bit_depth);
 typedef void (*oapv_fn_img_pad_t)(oapve_ctx_t *ctx, oapv_imgb_t *imgb);
 typedef int (*oapv_fn_had8x8_t)(pel *org, int s_org);
 
@@ -311,6 +311,7 @@ struct oapve_ctx {
     oapve_rc_param_t          rc_param;
 
     int                       threads; // num of thread for encoding
+    int                       au_bs_fmt; // access unit bitstream format
     /* platform specific data, if needed */
     void                     *pf;
 };

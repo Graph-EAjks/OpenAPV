@@ -63,7 +63,7 @@ aligned(8) class APVDecoderConfigurationBox extends FullBox('apvC',version=0, fl
 }
 ~~~~
 
-## APV Decoder Configuration Record {#APVDecoderConfigurationRecord}		
+## APV Decoder Configuration Record {#APVDecoderConfigurationRecord}
 
 The APVDecoderConfigurationRecord contains the information for initial configuration of a decoder which consumes the samples references the sample entry type of apv1. The information in this record is extracted from frame_header() of the bitstream stored in the track containing this record.
 
@@ -159,7 +159,7 @@ the full_range_flag field in the frame header of the frames whose value of the p
 ## APV Sample Description
 
 ###	Format of sample
-When APV coded bitstream is encapsulated in a track with APVSamspleEntry, each sample shall contain one and only one access unit of APV coded data
+When APV coded bitstream is encapsulated in a track with APVSampleEntry, each sample shall contain one and only one access unit of APV coded data. The format of sample shall be same as the raw_bitstream_access_unit, the length field of four bytes preceeding the access unit data, as defined in the section 12.1 of [APV codec specification](#apv-codec).
 
 ###	Sync sample
 Every samples of APV bitstream shall be sync samples.
@@ -187,3 +187,29 @@ else {
 ~~~~
 
 tile_index for sub-samples based on tiles, this parameter indicates the tile index in raster order in a frame.
+
+# Sub-parameters for the MIME tyype 'codecs' parameter
+
+When the 'codecs' parameter of a MIME type is used for a track containing  APV bistream, as defined in IETF RFC 6381, the sub-parameters defined in this section is used.
+
+The 'codecs' parameter string for the APV bitstream is defined as follows:
+
+~~~
+<4CC value of sample entry>.<key1><value1>.<key2><value2>...<keyN><valueN>
+~~~
+
+The keys are defined as 4CC values and the value used for each keys are defined in the table below.
+
+|Key|Meaning|Value|
+|:-:|:-:|:-:|
+|'apvf'| profile | the largest value of the profile_idc in APVDecoderConfigurationRecord |
+|'apvl'| level | the largest value of the level_idc in APVDecoderConfigurationRecord |
+|'apvb'| band | the largest value of the band_idc in APVDecoderConfigurationRecord |
+
+For example, codecs="apv1.apvf44.apvl210.apvb3" indicates the track is compliant to 'apv1' sample entry type and the largest value of the profile in APVDecoderConfigurationRecord of the track is 422-12 profile, the level is 7 and the band is 3.
+
+# References
+
+<a name="apv-codec"></a>
++ APV codec
+> The IETF Internet-Draft of APV codec: https://datatracker.ietf.org/doc/html/draft-lim-apv.
