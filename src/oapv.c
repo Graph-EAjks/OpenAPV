@@ -347,7 +347,7 @@ static double enc_block_rdo_slow(oapve_ctx_t *ctx, oapve_core_t *core, int log2_
     s16       *best_recon = core->coef_rec;
     int        best_cost = INT_MAX;
     int        zero_dist = 0;
-    const u16 *scanp = oapv_tbl_scan;
+    const u8  *scanp = oapv_tbl_scan;
     const int  map_idx_diff[15] = { 0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7 };
 
     oapv_mcpy(org, core->coef, sizeof(s16) * OAPV_BLK_D);
@@ -449,7 +449,7 @@ static double enc_block_rdo_medium(oapve_ctx_t *ctx, oapve_core_t *core, int log
 
     int        best_cost = INT_MAX;
     int        zero_dist = 0;
-    const u16 *scanp = oapv_tbl_scan;
+    const u8  *scanp = oapv_tbl_scan;
     const int  map_idx_diff[15] = { 0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7 };
 
     oapv_mcpy(org, core->coef, sizeof(s16) * OAPV_BLK_D);
@@ -559,7 +559,7 @@ static double enc_block_rdo_placebo(oapve_ctx_t *ctx, oapve_core_t *core, int lo
     ALIGNED_16(s16 coeff[OAPV_BLK_D]);
     int        best_cost = INT_MAX;
     int        zero_dist = 0;
-    const u16 *scanp = oapv_tbl_scan;
+    const u8  *scanp = oapv_tbl_scan;
     const int  map_idx_diff[15] = { 0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7 };
 
     oapv_mcpy(org, core->coef, sizeof(s16) * OAPV_BLK_D);
@@ -788,8 +788,8 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
                     ctx->fn_imgb_to_blk[c](o16, OAPV_BLK_W, OAPV_BLK_H, s_org, blk_x, (OAPV_BLK_W << 1), core->coef, ctx->bit_depth);
 
                     ctx->fn_enc_blk(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);
-                    oapve_vlc_dc_coeff(ctx, core, bs, core->dc_diff, c);
-                    oapve_vlc_ac_coeff(ctx, core, bs, core->coef, 0, c);
+                    oapve_vlc_dc_coef(ctx, core, bs, core->dc_diff, c);
+                    oapve_vlc_ac_coef(ctx, core, bs, core->coef, 0, c);
                     DUMP_COEF(core->coef, OAPV_BLK_D, blk_x, blk_y, c);
 
                     if(rec != NULL) {
@@ -1648,11 +1648,11 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
                     oapv_mset_x128(core->coef, 0, sizeof(s16)*OAPV_MB_D);
 
                     // parse DC coefficient
-                    ret = oapvd_vlc_dc_coeff(ctx, core, bs, &core->dc_diff, c);
+                    ret = oapvd_vlc_dc_coef(ctx, core, bs, &core->dc_diff, c);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
                     // parse AC coefficient
-                    ret = oapvd_vlc_ac_coeff(ctx, core, bs, core->coef, c);
+                    ret = oapvd_vlc_ac_coef(ctx, core, bs, core->coef, c);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
                     DUMP_COEF(core->coef, OAPV_BLK_D, blk_x, blk_y, c);
 
