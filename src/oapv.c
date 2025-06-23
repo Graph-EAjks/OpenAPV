@@ -1645,6 +1645,8 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
         for(mb_x = le; mb_x < ri; mb_x += mb_w) {
             for(blk_y = mb_y; blk_y < (mb_y + mb_h); blk_y += OAPV_BLK_H) {
                 for(blk_x = mb_x; blk_x < (mb_x + mb_w); blk_x += OAPV_BLK_W) {
+                    oapv_mset_x128(core->coef, 0, sizeof(s16)*OAPV_MB_D);
+
                     // parse DC coefficient
                     ret = oapvd_vlc_dc_coeff(ctx, core, bs, &core->dc_diff, c);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);

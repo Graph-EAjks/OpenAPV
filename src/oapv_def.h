@@ -67,6 +67,8 @@
 #define OAPV_MAX_DC_LEVEL_CTX     5
 #define OAPV_MIN_AC_LEVEL_CTX     0
 #define OAPV_MAX_AC_LEVEL_CTX     4
+#define OAPV_MIN_AC_RUN_CTX       0
+#define OAPV_MAX_AC_RUN_CTX       2
 
 /* Maximum transform dynamic range (excluding sign bit) */
 #define MAX_TX_DYNAMIC_RANGE      15
