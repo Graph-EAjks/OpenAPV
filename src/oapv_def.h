@@ -353,8 +353,8 @@ struct oapvd_core {
     ALIGNED_16(s16 coef[OAPV_MB_D]);
     s16          q_mat[N_C][OAPV_BLK_D];
 
-    int          prev_dc_ctx[N_C];
-    int          prev_1st_ac_ctx[N_C];
+    int          kparam_dc[N_C];
+    int          kparam_ac[N_C];
     int          prev_dc[N_C];
     int          dc_diff; /* DC difference, which is represented in 17 bits */
                           /* and coded as abs_dc_coeff_diff and sign_dc_coeff_diff */

@@ -1692,8 +1692,8 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
         int dq_scale = oapv_tbl_dq_scale[core->qp[c] % 6];
         core->dq_shift[c] = ctx->bit_depth - 2 - (core->qp[c] / 6);
 
-        core->prev_dc_ctx[c] = 20;
-        core->prev_1st_ac_ctx[c] = 0;
+        core->kparam_dc[c] = OAPV_MAX_DC_LEVEL_CTX;
+        core->kparam_ac[c] = OAPV_MIN_AC_LEVEL_CTX;
         core->prev_dc[c] = 0;
 
         midx = 0;

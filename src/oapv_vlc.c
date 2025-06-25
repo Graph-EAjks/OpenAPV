@@ -801,71 +801,13 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
     (bs)->code <<= 1;                       \
     (bs)->leftbits -= 1;
 
+#define KPARAM_DC(level)      oapv_min((level)>>1, OAPV_MAX_DC_LEVEL_CTX)
+#define KPARAM_AC(level)      oapv_min((level)>>2, OAPV_MAX_AC_LEVEL_CTX)
+#define KPARAM_RUN(run)       oapv_min((run)>>2, OAPV_MAX_AC_RUN_CTX)
 
-static void inline bsr_skip_code_opt(oapv_bs_t *bs, int size)
+static int dec_vlc_read_kparam0(oapv_bs_t *bs)
 {
-    if(size == 32) {
-        bs->code = 0;
-        bs->leftbits = 0;
-    }
-    else {
-        bs->code <<= size;
-        bs->leftbits -= size;
-    }
-}
-
-
-static int dec_vlc_read_universal(oapv_bs_t *bs, int k)
-{
-    u32 symbol;
-    int flag = 0;
-    int parse_exp_golomb = 0;
-
-    if(k > 0) {
-        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
-        BSR_READ_1BIT(bs, flag);
-    }
-
-    if(flag == 0) {
-        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
-        BSR_READ_1BIT(bs, flag);
-
-        symbol = (1 + flag) << k;
-        parse_exp_golomb = flag;
-    }
-    else {
-        symbol = 0;
-    }
-    if(parse_exp_golomb) {
-        while(1) {
-            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
-            BSR_READ_1BIT(bs, flag);
-
-            if(flag == 1) {
-                break;
-            }
-            else {
-                symbol += (1 << k);
-                k++;
-            }
-        }
-    }
-    if(k > 0) {
-        while(bs->leftbits < k) {
-            symbol += bs->code >> (32 - k);
-            k -= bs->leftbits;
-            BSR_FLUSH_1BYTE(bs);
-        }
-        symbol += bs->code >> (32 - k);
-        bs->code <<= k;
-        bs->leftbits -= k;
-    }
-    return symbol;
-}
-
-static int dec_vlc_read_exp_golomb_k0(oapv_bs_t *bs)
-{
-    u32 symbol;
+    int symbol;
     int flag, k;
 
     symbol = 2;
@@ -879,11 +821,12 @@ static int dec_vlc_read_exp_golomb_k0(oapv_bs_t *bs)
             break;
         }
         else {
-            symbol += (1 << k);
             k++;
         }
     }
     if(k > 0) {
+        symbol += ((u32)0xFFFFFFFF) >> (32 - k);
+
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
@@ -896,16 +839,16 @@ static int dec_vlc_read_exp_golomb_k0(oapv_bs_t *bs)
     return symbol;
 }
 
-static int dec_vlc_read_1bit_read(oapv_bs_t *bs, int k)
+static int dec_vlc_read_1bit_read(oapv_bs_t *bs)
 {
-    u32 symbol;
-    int flag;
+    int symbol;
+    int flag, k;
 
     if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
     BSR_READ_1BIT(bs, flag);
 
-    symbol = (1 + flag) << k;
-
+    symbol = (1 + flag);
+    k = 0;
     if(flag) { // parse_exp_golomb
         while(1) {
             if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
@@ -915,12 +858,13 @@ static int dec_vlc_read_1bit_read(oapv_bs_t *bs, int k)
                 break;
             }
             else {
-                symbol += (1 << k);
                 k++;
             }
         }
     }
     if(k > 0) {
+        symbol += ((u32)0xFFFFFFFF) >> (32 - k);
+
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
@@ -935,7 +879,7 @@ static int dec_vlc_read_1bit_read(oapv_bs_t *bs, int k)
 
 static int dec_vlc_read(oapv_bs_t *bs, int k)
 {
-    u32 symbol;
+    int symbol;
     int flag;
     int parse_exp_golomb = 0;
 
@@ -1033,25 +977,26 @@ static int dec_vlc_tile_info(oapv_bs_t *bs, oapv_fh_t *fh)
 
 int oapvd_vlc_dc_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, int *dc_diff, int c)
 {
-    int rice_level = 0;
     int abs_dc_diff;
-    int sign_dc_diff = 0;
+    int sign;
 
-//    rice_level = oapv_clip3(OAPV_MIN_DC_LEVEL_CTX, OAPV_MAX_DC_LEVEL_CTX, core->prev_dc_ctx[c] >> 1);
-    abs_dc_diff = dec_vlc_read(bs, core->prev_dc_ctx[c]);
-    if(abs_dc_diff)
-        sign_dc_diff = oapv_bsr_read1(bs);
-
-    *dc_diff = sign_dc_diff ? -abs_dc_diff : abs_dc_diff;
-    core->prev_dc_ctx[c] = rice_level = oapv_clip3(OAPV_MIN_DC_LEVEL_CTX, OAPV_MAX_DC_LEVEL_CTX, abs_dc_diff >> 1);
-        //abs_dc_diff;
-
+    abs_dc_diff = dec_vlc_read(bs, core->kparam_dc[c]);
+    if(abs_dc_diff) {
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, sign);
+        *dc_diff = oapv_set_sign16(abs_dc_diff, sign);
+        core->kparam_dc[c] = KPARAM_DC(abs_dc_diff);
+    }
+    else {
+        *dc_diff = 0;
+        core->kparam_dc[c] = OAPV_MIN_DC_LEVEL_CTX;
+    }
     return OAPV_OK;
 }
 
 int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *coef, int c)
 {
-    int        level, run, prev_level, flag;
+    int        level, run, kparam_ac, kparam_run, flag;
     int        scan_pos_offset;
     const u8  *scanp;
 
@@ -1059,15 +1004,12 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
     scan_pos_offset = 1;
 
     int first_ac = 1;
-    prev_level = core->prev_1st_ac_ctx[c];
-    int prev_run = 0;
+    kparam_run = OAPV_MIN_AC_RUN_CTX;
+    kparam_ac = core->kparam_ac[c];
 
     do {
         // run parsing
-        int rice_run = prev_run >> 2;
-        if(rice_run > OAPV_MAX_AC_RUN_CTX) rice_run = OAPV_MAX_AC_RUN_CTX;
-
-        if(rice_run == 0) { // early termination
+        if(kparam_run == 0) { // early termination
             if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
             BSR_READ_1BIT(bs, flag);
 
@@ -1082,12 +1024,12 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
                     run = 1;
                 }
                 else {
-                    run = dec_vlc_read_exp_golomb_k0(bs);
+                    run = dec_vlc_read_kparam0(bs);
                 }
             }
         }
         else {
-            run = dec_vlc_read(bs, rice_run);
+            run = dec_vlc_read(bs, kparam_run);
         }
 
         // here, no need to set 'zero-run' in coef; it's already initialized to zero.
@@ -1097,12 +1039,11 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
             break; // reached the end of coefficients without level value
         }
         scan_pos_offset += run;
-        prev_run = run; // backup
+
+        kparam_run = KPARAM_RUN(run);
 
         // level parsing
-        int rice_level = oapv_clip3(OAPV_MIN_AC_LEVEL_CTX, OAPV_MAX_AC_LEVEL_CTX, prev_level >> 2);
-
-        if(rice_level == 0) {
+        if(kparam_ac == 0) {
             if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
             BSR_READ_1BIT(bs, flag);
 
@@ -1110,19 +1051,14 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
                 level = 0;
             }
             else {
-                level = dec_vlc_read_1bit_read(bs, rice_level);
+                level = dec_vlc_read_1bit_read(bs);
             }
         }
         else {
-            level = dec_vlc_read(bs, rice_level);
+            level = dec_vlc_read(bs, kparam_ac);
         }
         level++;
-
-        if(first_ac) {
-            first_ac = 0;
-            core->prev_1st_ac_ctx[c] = level;
-        }
-        prev_level = level; // backup
+        kparam_ac = KPARAM_AC(level);
 
         // sign parsing
         if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
@@ -1130,10 +1066,15 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
 
         coef[scanp[scan_pos_offset]] = oapv_set_sign16(level, flag);
 
-       if(scan_pos_offset >= OAPV_BLK_D - 1) {
-           break;
-       }
+        if(scan_pos_offset >= OAPV_BLK_D - 1) {
+            break;
+        }
         scan_pos_offset++;
+
+        if(first_ac) {
+            first_ac = 0;
+            core->kparam_ac[c] = kparam_ac;
+        }
     } while(1);
     return OAPV_OK;
 }
