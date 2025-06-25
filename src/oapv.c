@@ -1649,11 +1649,11 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
                     oapv_mset_x128(core->coef, 0, sizeof(s16)*OAPV_MB_D);
 
                     // parse DC coefficient
-                    ret = oapvd_vlc_dc_coef(ctx, core, bs, &core->dc_diff, c);
+                    ret = oapvd_vlc_dc_coef(bs, &core->dc_diff, &core->kparam_dc[c]);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
                     // parse AC coefficient
-                    ret = oapvd_vlc_ac_coef(ctx, core, bs, core->coef, c);
+                    ret = oapvd_vlc_ac_coef(bs, core->coef, &core->kparam_ac[c]);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
                     DUMP_COEF(core->coef, OAPV_BLK_D, blk_x, blk_y, c);
 
@@ -1692,8 +1692,8 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
         int dq_scale = oapv_tbl_dq_scale[core->qp[c] % 6];
         core->dq_shift[c] = ctx->bit_depth - 2 - (core->qp[c] / 6);
 
-        core->kparam_dc[c] = OAPV_MAX_DC_LEVEL_CTX;
-        core->kparam_ac[c] = OAPV_MIN_AC_LEVEL_CTX;
+        core->kparam_dc[c] = OAPV_KPARAM_DC_MAX;
+        core->kparam_ac[c] = OAPV_KPARAM_AC_MIN;
         core->prev_dc[c] = 0;
 
         midx = 0;
