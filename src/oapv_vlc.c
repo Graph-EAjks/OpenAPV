@@ -1037,13 +1037,14 @@ int oapvd_vlc_dc_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, int *
     int abs_dc_diff;
     int sign_dc_diff = 0;
 
-    rice_level = oapv_clip3(OAPV_MIN_DC_LEVEL_CTX, OAPV_MAX_DC_LEVEL_CTX, core->prev_dc_ctx[c] >> 1);
-    abs_dc_diff = dec_vlc_read(bs, rice_level);
+//    rice_level = oapv_clip3(OAPV_MIN_DC_LEVEL_CTX, OAPV_MAX_DC_LEVEL_CTX, core->prev_dc_ctx[c] >> 1);
+    abs_dc_diff = dec_vlc_read(bs, core->prev_dc_ctx[c]);
     if(abs_dc_diff)
         sign_dc_diff = oapv_bsr_read1(bs);
 
     *dc_diff = sign_dc_diff ? -abs_dc_diff : abs_dc_diff;
-    core->prev_dc_ctx[c] = abs_dc_diff;
+    core->prev_dc_ctx[c] = rice_level = oapv_clip3(OAPV_MIN_DC_LEVEL_CTX, OAPV_MAX_DC_LEVEL_CTX, abs_dc_diff >> 1);
+        //abs_dc_diff;
 
     return OAPV_OK;
 }
