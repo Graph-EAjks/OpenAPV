@@ -790,20 +790,17 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 // start of decoder code
 #if ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
-#define OAPV_READ_FLUSH_1(bs)               \
+#define BSR_FLUSH_1BYTE(bs)                 \
     {                                       \
         (bs)->code = *((bs)->cur++) << 24;  \
         (bs)->leftbits = 8;                 \
     }
 
-#define OAPV_READ_FLUSH_4(bs)               \
-    {                                       \
-        (bs)->code = *((bs)->cur++) << 24;  \
-        (bs)->code |= *((bs)->cur++) << 16; \
-        (bs)->code |= *((bs)->cur++) << 8;  \
-        (bs)->code |= *((bs)->cur++);       \
-        (bs)->leftbits = 32;                \
-    }
+#define BSR_READ_1BIT(bs, bit)              \
+    (bit) = ((bs)->code >> 31) & 0x1;       \
+    (bs)->code <<= 1;                       \
+    (bs)->leftbits -= 1;
+
 
 static void inline bsr_skip_code_opt(oapv_bs_t *bs, int size)
 {
@@ -825,17 +822,13 @@ static int dec_vlc_read_universal(oapv_bs_t *bs, int k)
     int parse_exp_golomb = 0;
 
     if(k > 0) {
-        if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-        flag = (bs->code >> 31) & 0x1;
-        bs->code <<= 1;
-        bs->leftbits -= 1;
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, flag);
     }
 
     if(flag == 0) {
-        if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-        flag = (bs->code >> 31) & 0x1;
-        bs->code <<= 1;
-        bs->leftbits -= 1;
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, flag);
 
         symbol = (1 + flag) << k;
         parse_exp_golomb = flag;
@@ -845,11 +838,8 @@ static int dec_vlc_read_universal(oapv_bs_t *bs, int k)
     }
     if(parse_exp_golomb) {
         while(1) {
-            if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-
-            flag = (bs->code >> 31) & 0x1;
-            bs->code <<= 1;
-            bs->leftbits -= 1;
+            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+            BSR_READ_1BIT(bs, flag);
 
             if(flag == 1) {
                 break;
@@ -864,7 +854,7 @@ static int dec_vlc_read_universal(oapv_bs_t *bs, int k)
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
-            OAPV_READ_FLUSH_1(bs);
+            BSR_FLUSH_1BYTE(bs);
         }
         symbol += bs->code >> (32 - k);
         bs->code <<= k;
@@ -882,11 +872,8 @@ static int dec_vlc_read_exp_golomb_k0(oapv_bs_t *bs)
     k = 0;
 
     while(1) {
-        if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-
-        flag = (bs->code >> 31) & 0x1;
-        bs->code <<= 1;
-        bs->leftbits -= 1;
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, flag);
 
         if(flag) {
             break;
@@ -900,7 +887,7 @@ static int dec_vlc_read_exp_golomb_k0(oapv_bs_t *bs)
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
-            OAPV_READ_FLUSH_1(bs);
+            BSR_FLUSH_1BYTE(bs);
         }
         symbol += bs->code >> (32 - k);
         bs->code <<= k;
@@ -914,20 +901,15 @@ static int dec_vlc_read_1bit_read(oapv_bs_t *bs, int k)
     u32 symbol;
     int flag;
 
-    if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-    flag = (bs->code >> 31) & 0x1;
-    bs->code <<= 1;
-    bs->leftbits -= 1;
+    if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+    BSR_READ_1BIT(bs, flag);
 
     symbol = (1 + flag) << k;
 
     if(flag) { // parse_exp_golomb
         while(1) {
-            if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-
-            flag = (bs->code >> 31) & 0x1;
-            bs->code <<= 1;
-            bs->leftbits -= 1;
+            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+            BSR_READ_1BIT(bs, flag);
 
             if(flag) {
                 break;
@@ -942,7 +924,7 @@ static int dec_vlc_read_1bit_read(oapv_bs_t *bs, int k)
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
-            OAPV_READ_FLUSH_1(bs);
+            BSR_FLUSH_1BYTE(bs);
         }
         symbol += bs->code >> (32 - k);
         bs->code <<= k;
@@ -957,16 +939,12 @@ static int dec_vlc_read(oapv_bs_t *bs, int k)
     int flag;
     int parse_exp_golomb = 0;
 
-    if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-    flag = (bs->code >> 31) & 0x1;
-    bs->code <<= 1;
-    bs->leftbits -= 1;
+    if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+    BSR_READ_1BIT(bs, flag);
 
     if(flag == 0) {
-        if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-        flag = (bs->code >> 31) & 0x1;
-        bs->code <<= 1;
-        bs->leftbits -= 1;
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, flag);
 
         symbol = (1 + flag) << k;
         parse_exp_golomb = flag;
@@ -976,11 +954,8 @@ static int dec_vlc_read(oapv_bs_t *bs, int k)
     }
     if(parse_exp_golomb) {
         while(1) {
-            if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-
-            flag = (bs->code >> 31) & 0x1;
-            bs->code <<= 1;
-            bs->leftbits -= 1;
+            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+            BSR_READ_1BIT(bs, flag);
 
             if(flag == 1) {
                 break;
@@ -995,7 +970,7 @@ static int dec_vlc_read(oapv_bs_t *bs, int k)
         while(bs->leftbits < k) {
             symbol += bs->code >> (32 - k);
             k -= bs->leftbits;
-            OAPV_READ_FLUSH_1(bs);
+            BSR_FLUSH_1BYTE(bs);
         }
         symbol += bs->code >> (32 - k);
         bs->code <<= k;
@@ -1075,13 +1050,12 @@ int oapvd_vlc_dc_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, int *
 
 int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *coef, int c)
 {
-    int        level, run, prev_level;
+    int        level, run, prev_level, flag;
     int        scan_pos_offset;
     const u8  *scanp;
 
     scanp = oapv_tbl_scan;
     scan_pos_offset = 1;
-    run = 0;
 
     int first_ac = 1;
     prev_level = core->prev_1st_ac_ctx[c];
@@ -1093,18 +1067,15 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
         if(rice_run > OAPV_MAX_AC_RUN_CTX) rice_run = OAPV_MAX_AC_RUN_CTX;
 
         if(rice_run == 0) { // early termination
-            if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-            int flag = (bs->code >> 31) & 0x1;
-            bs->code <<= 1;
-            bs->leftbits -= 1;
+            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+            BSR_READ_1BIT(bs, flag);
 
-            if(flag)
+            if(flag) {
                 run = 0;
+            }
             else {
-                if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-                int flag = (bs->code >> 31) & 0x1;
-                bs->code <<= 1;
-                bs->leftbits -= 1;
+                if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+                BSR_READ_1BIT(bs, flag);
 
                 if(flag == 0) {
                     run = 1;
@@ -1122,7 +1093,7 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
 
         if(scan_pos_offset + run >= OAPV_BLK_D) {
             oapv_assert_rv(scan_pos_offset + run <= OAPV_BLK_D, OAPV_ERR_MALFORMED_BITSTREAM); // bitstream error
-            break; // finished
+            break; // reached the end of coefficients without level value
         }
         scan_pos_offset += run;
         prev_run = run; // backup
@@ -1131,14 +1102,15 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
         int rice_level = oapv_clip3(OAPV_MIN_AC_LEVEL_CTX, OAPV_MAX_AC_LEVEL_CTX, prev_level >> 2);
 
         if(rice_level == 0) {
-            if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-            int flag = (bs->code >> 31) & 0x1;
-            bs->code <<= 1;
-            bs->leftbits -= 1;
-            if(flag)
+            if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+            BSR_READ_1BIT(bs, flag);
+
+            if(flag) {
                 level = 0;
-            else
+            }
+            else {
                 level = dec_vlc_read_1bit_read(bs, rice_level);
+            }
         }
         else {
             level = dec_vlc_read(bs, rice_level);
@@ -1152,16 +1124,14 @@ int oapvd_vlc_ac_coef(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 *
         prev_level = level; // backup
 
         // sign parsing
-        if(bs->leftbits == 0) OAPV_READ_FLUSH_1(bs);
-        int sign = (bs->code >> 31) & 0x1;
-        bs->code <<= 1;
-        bs->leftbits -= 1;
+        if(bs->leftbits == 0) BSR_FLUSH_1BYTE(bs);
+        BSR_READ_1BIT(bs, flag);
 
-        coef[scanp[scan_pos_offset]] = oapv_set_sign16(level, sign);
+        coef[scanp[scan_pos_offset]] = oapv_set_sign16(level, flag);
 
-        if(scan_pos_offset >= OAPV_BLK_D - 1) {
-            break;
-        }
+       if(scan_pos_offset >= OAPV_BLK_D - 1) {
+           break;
+       }
         scan_pos_offset++;
     } while(1);
     return OAPV_OK;
