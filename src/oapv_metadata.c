@@ -111,13 +111,14 @@ static int meta_md_rm_mdp(oapv_md_t *md, int mdt)
 
     if(mdp->pld_type == mdt) {
         if(mdp_prev == NULL) {
-            md->md_payload = NULL;
+            md->md_payload = mdp->next;
         }
         else {
             mdp_prev->next = mdp->next;
         }
         meta_md_free_mdp(mdp);
         md->md_size -= meta_get_byte_pld_all(mdp);
+        oapv_mfree(mdp);
         md->md_num--;
         return OAPV_OK;
     }
@@ -133,7 +134,7 @@ static int meta_md_rm_usd(oapv_md_t *md, unsigned char *uuid)
         if(mdp->pld_type == OAPV_METADATA_USER_DEFINED) {
             if(oapv_mcmp(uuid, mdp->pld_data, 16) == 0) {
                 if(mdp_prev == NULL) {
-                    md->md_payload = NULL;
+                    md->md_payload = mdp->next;
                 }
                 else {
                     mdp_prev->next = mdp->next;
@@ -141,6 +142,7 @@ static int meta_md_rm_usd(oapv_md_t *md, unsigned char *uuid)
                 oapv_assert_rv(md->md_size >= mdp->pld_size, OAPV_ERR_UNEXPECTED);
                 meta_md_free_mdp(mdp);
                 md->md_size -= meta_get_byte_pld_all(mdp);
+                oapv_mfree(mdp);
                 md->md_num--;
                 return OAPV_OK;
             }
@@ -167,6 +169,8 @@ static oapv_mdp_t *meta_md_find_usd(oapv_md_t *md, unsigned char *uuid)
 
     return NULL;
 }
+
+
 
 static int meta_verify_mdp_data(int type, int size, u8 *data)
 {
@@ -220,6 +224,12 @@ int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigne
     oapv_assert_rv(md_list, OAPV_ERR_INVALID_ARGUMENT);
     int          ret = meta_verify_mdp_data(type, size, (u8 *)data);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
+    void *tmp_mdp_data = NULL;
+    if(data != NULL && size > 0) {
+        tmp_mdp_data = oapv_malloc(size);
+        oapv_assert_rv(tmp_mdp_data != NULL, OAPV_ERR_OUT_OF_MEMORY);
+        oapv_mcpy(tmp_mdp_data, data, size);
+    }
 
     int md_list_idx = 0;
     while(md_list_idx < md_list->num) {
@@ -240,12 +250,17 @@ int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigne
                                                  (type == OAPV_METADATA_USER_DEFINED) ? uuid : NULL);
     }
     oapv_mdp_t *tmp_mdp = oapv_malloc(sizeof(oapv_mdp_t));
-    oapv_assert_rv(tmp_mdp != NULL, OAPV_ERR_OUT_OF_MEMORY);
+    if(tmp_mdp == NULL) {
+        if(tmp_mdp_data != NULL) {
+            oapv_mfree(tmp_mdp_data);
+        }
+        return OAPV_ERR_OUT_OF_MEMORY;
+    }
 
     oapv_mset(tmp_mdp, 0, sizeof(oapv_mdp_t));
     tmp_mdp->pld_size = size;
     tmp_mdp->pld_type = type;
-    tmp_mdp->pld_data = data;
+    tmp_mdp->pld_data = tmp_mdp_data;
     *last_ptr = tmp_mdp;
     md_list->md_arr[md_list_idx].md_size += meta_get_byte_pld_all(tmp_mdp);
     md_list->md_arr[md_list_idx].md_num++;
@@ -314,12 +329,25 @@ int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds)
             last_ptr = meta_mdp_find_last_with_check(&md_list->md_arr[md_list_idx], pld[i].type,
                                                      (pld[i].type == OAPV_METADATA_USER_DEFINED) ? pld[i].uuid : NULL);
         }
+        void *tmp_mdp_data = NULL;
+        if(pld[i].data != NULL && pld[i].data_size > 0) {
+            tmp_mdp_data = oapv_malloc(pld[i].data_size);
+            oapv_assert_rv(tmp_mdp_data != NULL, OAPV_ERR_OUT_OF_MEMORY);
+            oapv_mcpy(tmp_mdp_data, pld[i].data, pld[i].data_size);
+        }
+
         oapv_mdp_t *tmp_mdp = oapv_malloc(sizeof(oapv_mdp_t));
+        if(tmp_mdp == NULL) {
+            if(tmp_mdp_data != NULL) {
+                oapv_mfree(tmp_mdp_data);
+            }
+            return OAPV_ERR_OUT_OF_MEMORY;
+        }
         oapv_assert_rv(tmp_mdp != NULL, OAPV_ERR_OUT_OF_MEMORY);
         oapv_mset(tmp_mdp, 0, sizeof(oapv_mdp_t));
         tmp_mdp->pld_size = pld[i].data_size;
         tmp_mdp->pld_type = pld[i].type;
-        tmp_mdp->pld_data = pld[i].data;
+        tmp_mdp->pld_data = tmp_mdp_data;
         md_list->md_arr[md_list_idx].md_size += meta_get_byte_pld_all(tmp_mdp);
 
         *last_ptr = tmp_mdp;

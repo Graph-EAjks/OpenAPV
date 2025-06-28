@@ -1353,22 +1353,21 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         oapv_assert_gv(payload_size <= metadata_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
 
         if(payload_size > 0) {
-
-            payload_data = oapv_malloc(payload_size);
-            oapv_assert_gv(payload_data != NULL, ret, OAPV_ERR_OUT_OF_MEMORY, ERR);
+            oapv_bsr_sink(bs);
+            payload_data = bs->cur;
+            
+            
             if(payload_type == OAPV_METADATA_FILLER) {
                 for(u32 i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
                     DUMP_HLS(payload_data, t0);
                     oapv_assert_gv(t0 == 0xFF, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-                    payload_data[i] = 0xFF;
                 }
             }
             else {
                 for(u32 i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
                     DUMP_HLS(payload_data, t0);
-                    payload_data[i] = t0;
                 }
             }
         }

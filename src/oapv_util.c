@@ -286,7 +286,10 @@ int oapv_set_md5_pld(oapvm_t mid, int group_id, oapv_imgb_t *rec)
     for(int i = 0; i < rec->np; i++) {
         memcpy(mdp_data + ((i + 1) * 16), rec->hash[i], 16);
     }
-    return oapvm_set(mid, group_id, OAPV_METADATA_USER_DEFINED, mdp_data, 16 * rec->np + 16, uuid_frm_hash);
+    int ret = oapvm_set(mid, group_id, OAPV_METADATA_USER_DEFINED, mdp_data, 16 * rec->np + 16, uuid_frm_hash);
+    oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
+    oapv_mfree(mdp_data);
+    return OAPV_OK;
 }
 
 void oapv_block_copy(s16 *src, int src_stride, s16 *dst, int dst_stride, int log2_copy_w, int log2_copy_h)
