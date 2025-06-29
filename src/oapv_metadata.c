@@ -252,7 +252,9 @@ int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigne
     }
     oapv_mdp_t *tmp_mdp = oapv_malloc(sizeof(oapv_mdp_t));
     if(tmp_mdp == NULL) {
-        oapv_mfree(tmp_mdp_data);
+        if(size > 0) {
+            oapv_mfree(tmp_mdp_data);
+        }
         return OAPV_ERR_OUT_OF_MEMORY;
     }
     oapv_mset(tmp_mdp, 0, sizeof(oapv_mdp_t));
@@ -336,7 +338,9 @@ int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds)
 
         oapv_mdp_t *tmp_mdp = oapv_malloc(sizeof(oapv_mdp_t));
         if(tmp_mdp == NULL) {
-            oapv_mfree(tmp_mdp_data);
+            if(pld[i].data_size > 0) {
+                oapv_mfree(tmp_mdp_data);
+            }
             return OAPV_ERR_OUT_OF_MEMORY;
         }
         oapv_assert_rv(tmp_mdp != NULL, OAPV_ERR_OUT_OF_MEMORY);
