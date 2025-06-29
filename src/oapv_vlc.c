@@ -1308,7 +1308,7 @@ int oapvd_vlc_ac_coeff(oapvd_ctx_t *ctx, oapvd_core_t *core, oapv_bs_t *bs, s16 
 
 int oapvd_vlc_tile_dummy_data(oapv_bs_t *bs)
 {
-    while(bs->cur <= bs->end) {
+    while(bs->cur < bs->end) {
         oapv_bsr_read(bs, 8);
     }
     return OAPV_OK;
