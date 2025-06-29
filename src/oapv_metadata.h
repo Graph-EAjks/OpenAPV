@@ -40,8 +40,8 @@
 /* Metadata payload */
 typedef struct oapv_mdp oapv_mdp_t;
 struct oapv_mdp {
-    u32         pld_type; /* u(8) */
-    u32         pld_size; /* u(8) */
+    u32         pld_type; /* u(32) */
+    u32         pld_size; /* u(32) */
     void       *pld_data;
     oapv_mdp_t *next;
 };

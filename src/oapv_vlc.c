@@ -1355,8 +1355,6 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         if(payload_size > 0) {
             oapv_bsr_sink(bs);
             payload_data = bs->cur;
-            
-            
             if(payload_type == OAPV_METADATA_FILLER) {
                 for(u32 i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
@@ -1382,7 +1380,6 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
     return OAPV_OK;
 
 ERR:
-    // TO-DO: free memory
     return ret;
 }
 
