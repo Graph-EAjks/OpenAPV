@@ -48,7 +48,8 @@ struct oapv_mdp {
 
 typedef struct oapv_md oapv_md_t;
 struct oapv_md {
-    int         md_num;
+    int         mdp_num;
+    int         group_id;
     u32         md_size; /* u(32) */
     oapv_mdp_t *md_payload;
 };
@@ -57,7 +58,6 @@ typedef struct oapvm_ctx oapvm_ctx_t;
 struct oapvm_ctx {
     u32       magic; // magic code
     oapv_md_t md_arr[OAPV_MAX_NUM_METAS];
-    int       group_ids[OAPV_MAX_NUM_METAS];
     int       num;
 };
 
