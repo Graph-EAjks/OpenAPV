@@ -50,7 +50,6 @@ typedef struct oapv_md oapv_md_t;
 struct oapv_md {
     int         mdp_num;
     int         group_id;
-    u32         md_size; /* u(32) */
     oapv_mdp_t *md_payload;
 };
 
