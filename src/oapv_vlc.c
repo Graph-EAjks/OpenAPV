@@ -577,7 +577,7 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 {
     u8 *bs_pos_md;
     bs_pos_md = oapv_bsw_sink(bs);
-    
+
     oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
 
     oapv_mdp_t *mdp = md->md_payload;
@@ -612,7 +612,7 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
     u32 md_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_md) - 4;
     oapv_bsw_write_direct(bs_pos_md, md_size, 32);
     DUMP_HLS(metadata_size, md_size);
- 
+
     return OAPV_OK;
 }
 
@@ -1362,7 +1362,7 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         if(payload_size > 0) {
             oapv_assert_gv(BSR_GET_LEFT_BYTE(bs) >= payload_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
             payload_data = oapv_bsr_sink(bs);
-  
+
             if(payload_type == OAPV_METADATA_FILLER) {
                 for(int i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
@@ -1384,8 +1384,7 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         else {
             payload_data = NULL;
         }
-        ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size,
-                        payload_type == OAPV_METADATA_USER_DEFINED ? payload_data : NULL);
+        ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
         metadata_size -= payload_size;
     }

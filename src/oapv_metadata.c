@@ -173,11 +173,12 @@ static void meta_free_md(oapv_md_t *md)
     }
 }
 
-int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigned char *uuid)
+int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size)
 {
     void        *pld_data_new = NULL;
     oapv_mdp_t  *mdp_new = NULL;
     int          ret = OAPV_OK;
+    u8          *uuid = NULL;
 
     oapvm_ctx_t *ctx = meta_id_to_ctx(mid);
     oapv_assert_rv(ctx, OAPV_ERR_INVALID_ARGUMENT);
@@ -185,6 +186,10 @@ int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigne
 
     ret = meta_verify_mdp_data(type, size, (u8 *)data);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
+
+    if(type == OAPV_METADATA_USER_DEFINED){
+        uuid = (u8 *)data;
+    }
 
     if(size > 0) {
         pld_data_new = oapv_malloc(size);
@@ -267,7 +272,7 @@ int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds)
 {
     int          ret;
     for(int i = 0; i < num_plds; i++) {
-        ret = oapvm_set(mid, pld[i].group_id, pld[i].type, pld[i].data, pld[i].data_size, pld[i].uuid);
+        ret = oapvm_set(mid, pld[i].group_id, pld[i].type, pld[i].data, pld[i].data_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
     }
     return OAPV_OK;

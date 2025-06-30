@@ -644,7 +644,7 @@ typedef void       *oapvm_t; // instance identifier for OAPV metadata container
 OAPV_EXPORT oapvm_t oapvm_create(int *err);
 OAPV_EXPORT void oapvm_delete(oapvm_t mid);
 OAPV_EXPORT void oapvm_rem_all(oapvm_t mid);
-OAPV_EXPORT int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigned char *uuid);
+OAPV_EXPORT int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size);
 OAPV_EXPORT int oapvm_get(oapvm_t mid, int group_id, int type, void **data, int *size, unsigned char *uuid);
 OAPV_EXPORT int oapvm_rem(oapvm_t mid, int group_id, int type, unsigned char *uuid);
 OAPV_EXPORT int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds);
