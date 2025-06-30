@@ -89,7 +89,7 @@ static oapv_mdp_t *meta_mdp_find_non_ud(oapv_md_t *md, int mdt, oapv_mdp_t **pre
 
     return mdp;
 }
-static oapv_mdp_t *meta_md_find_mdp(oapv_md_t *md, int type, unsigned char *uuid)
+static oapv_mdp_t *meta_find_mdp(oapv_md_t *md, int type, unsigned char *uuid)
 {
     oapv_mdp_t *prev_mdp;
     return (type == OAPV_METADATA_USER_DEFINED) ? meta_mdp_find_ud(md, uuid, &prev_mdp) : meta_mdp_find_non_ud(md, type, &prev_mdp);
@@ -176,12 +176,13 @@ static void meta_free_md(oapv_md_t *md)
 int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigned char *uuid)
 {
     void        *pld_data_new = NULL;
-    oapv_mdp_t  *mdp_new = NULL; 
+    oapv_mdp_t  *mdp_new = NULL;
     int          ret = OAPV_OK;
+
     oapvm_ctx_t *ctx = meta_id_to_ctx(mid);
     oapv_assert_rv(ctx, OAPV_ERR_INVALID_ARGUMENT);
     oapv_assert_rv((data != NULL && size > 0), OAPV_ERR_INVALID_ARGUMENT);
-    
+
     ret = meta_verify_mdp_data(type, size, (u8 *)data);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
@@ -190,35 +191,39 @@ int oapvm_set(oapvm_t mid, int group_id, int type, void *data, int size, unsigne
         oapv_assert_rv(pld_data_new != NULL, OAPV_ERR_OUT_OF_MEMORY);
         oapv_mcpy(pld_data_new, data, size);
     }
+    else {
+        pld_data_new = NULL;
+    }
 
-    oapv_md_t *cur_md = meta_find_md(ctx, group_id);
-    if(cur_md == NULL) {
+    oapv_md_t *md = meta_find_md(ctx, group_id);
+    if(md == NULL) {
         oapv_assert_rv(ctx->num < OAPV_MAX_NUM_METAS, OAPV_ERR_REACHED_MAX);
-        cur_md = &ctx->md_arr[ctx->num];
-        cur_md->group_id = group_id;
-        cur_md->mdp_num = 0;
-        cur_md->md_payload = NULL;
+        md = &ctx->md_arr[ctx->num];
+        md->group_id = group_id;
+        md->mdp_num = 0;
+        md->md_payload = NULL;
         ctx->num++;
     }
 
-    oapv_mdp_t  *mdp_t = meta_md_find_mdp(cur_md, type, uuid);
-    if(mdp_t != NULL) { // replace the exist one
-        mdp_t->pld_size = size;
-        oapv_mfree(mdp_t->pld_data);
-        mdp_t->pld_data = pld_data_new;
-    }
-    else { // add new one
+    oapv_mdp_t *mdp_t = meta_find_mdp(md, type, uuid);
+    if(mdp_t == NULL) { // add new one
         mdp_new = oapv_malloc(sizeof(oapv_mdp_t));
         oapv_assert_gv(mdp_new != NULL, ret, OAPV_ERR_OUT_OF_MEMORY, ERR);
         mdp_new->pld_size = size;
         mdp_new->pld_type = type;
         mdp_new->pld_data = pld_data_new;
-        mdp_new->next = cur_md->md_payload; // add to head
-        cur_md->md_payload = mdp_new;
-        cur_md->mdp_num++;
+        mdp_new->next = md->md_payload; // add to head
+
+        md->md_payload = mdp_new;
+        md->mdp_num++;
+    }
+    else { // replace the exist one
+        mdp_t->pld_size = size;
+        oapv_mfree(mdp_t->pld_data);
+        mdp_t->pld_data = pld_data_new;
     }
     return OAPV_OK;
-    
+
 ERR:
     if(mdp_new)
         oapv_mfree(mdp_new);
@@ -233,9 +238,9 @@ int oapvm_get(oapvm_t mid, int group_id, int type, void **data, int *size, unsig
     oapv_assert_rv(ctx, OAPV_ERR_INVALID_ARGUMENT);
     oapv_md_t   *md = meta_find_md(ctx, group_id);
     oapv_assert_g(md != NULL, ERR);
-    oapv_mdp_t *mdp = meta_md_find_mdp(md, type, uuid);
+    oapv_mdp_t *mdp = meta_find_mdp(md, type, uuid);
     oapv_assert_g(mdp != NULL, ERR);
-    
+
     *data = mdp->pld_data;
     *size = mdp->pld_size;
 
@@ -308,9 +313,8 @@ int oapvm_get_all(oapvm_t mid, oapvm_payload_t *pld, int *num_plds)
 
 void oapvm_rem_all(oapvm_t mid)
 {
-
     oapvm_ctx_t *ctx = meta_id_to_ctx(mid);
-    oapv_assert_rv(ctx, OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_r(ctx != NULL);
     for(int i = 0; i < ctx->num; i++) {
         meta_free_md(&ctx->md_arr[i]);
         oapv_mset(&ctx->md_arr[i], 0, sizeof(oapv_md_t));
@@ -335,7 +339,7 @@ oapvm_t oapvm_create(int *err)
 void oapvm_delete(oapvm_t mid)
 {
     oapvm_ctx_t *ctx = meta_id_to_ctx(mid);
-    oapv_assert_rv(ctx, OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_r(ctx != NULL);
     for(int i = 0; i < ctx->num; i++) {
         meta_free_md(&ctx->md_arr[i]);
     }
