@@ -168,10 +168,10 @@ static void meta_free_md(oapv_md_t *md)
 {
     oapv_mdp_t *mdp = md->md_payload;
     while(mdp != NULL) {
-        oapv_mdp_t *tmp_mdp = mdp;
+        oapv_mfree(mdp->pld_data);
+        oapv_mdp_t *mdp_t = mdp;
         mdp = mdp->next;
-        oapv_mfree(tmp_mdp->pld_data);
-        oapv_mfree(tmp_mdp);
+        oapv_mfree(mdp_t);
     }
 }
 

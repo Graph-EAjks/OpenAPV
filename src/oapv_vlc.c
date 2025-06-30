@@ -1369,6 +1369,9 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
                 }
             }
         }
+        else {
+            payload_data = NULL;
+        }
         ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size,
                         payload_type == OAPV_METADATA_USER_DEFINED ? payload_data : NULL);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
