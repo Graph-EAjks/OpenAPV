@@ -272,7 +272,7 @@ int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds)
 {
     int          ret;
     for(int i = 0; i < num_plds; i++) {
-        ret = oapvm_set(mid, pld[i].group_id, pld[i].type, pld[i].data, pld[i].data_size);
+        ret = oapvm_set(mid, pld[i].group_id, pld[i].type, pld[i].data, pld[i].size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
     }
     return OAPV_OK;
@@ -302,7 +302,7 @@ int oapvm_get_all(oapvm_t mid, oapvm_payload_t *pld, int *num_plds)
         while(mdp != NULL) {
             oapv_assert_rv(pld_cnt < *num_plds, OAPV_ERR_REACHED_MAX);
             pld[pld_cnt].group_id = group_id;
-            pld[pld_cnt].data_size = mdp->pld_size;
+            pld[pld_cnt].size = mdp->pld_size;
             pld[pld_cnt].data = mdp->pld_data;
             pld[pld_cnt].type = mdp->pld_type;
             if(pld[pld_cnt].type == OAPV_METADATA_USER_DEFINED) {
