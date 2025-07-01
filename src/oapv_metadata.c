@@ -128,6 +128,7 @@ static oapv_md_t *meta_find_md(oapvm_ctx_t *ctx, int group_id)
     return NULL;
 }
 
+
 static int meta_verify_mdp_data(int type, int size, u8 *data)
 {
     if(type == OAPV_METADATA_ITU_T_T35) {
@@ -247,7 +248,6 @@ int oapvm_get(oapvm_t mid, int group_id, int type, void **data, int *size, unsig
 
     *data = mdp->pld_data;
     *size = mdp->pld_size;
-
     return OAPV_OK;
 
 ERR:
@@ -279,6 +279,7 @@ int oapvm_set_all(oapvm_t mid, oapvm_payload_t *pld, int num_plds)
 ERR:
     return ret;
 }
+
 
 int oapvm_get_all(oapvm_t mid, oapvm_payload_t *pld, int *num_plds)
 {
