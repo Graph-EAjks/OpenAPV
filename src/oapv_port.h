@@ -183,7 +183,6 @@ void oapv_mfree_align32(void *p);
 #else
 #define oapv_mset_x128(dst, v, size) memset((dst), (v), (size))
 #endif
-#define oapv_mset_x128(dst, v, size) memset((dst), (v), (size))
 #define oapv_mcmp(dst, src, size)    memcmp((dst), (src), (size))
 
 static __inline void oapv_mset_16b(s16 *dst, s16 v, int cnt)
