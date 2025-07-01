@@ -747,8 +747,11 @@ int oapve_vlc_pbu_header(oapv_bs_t *bs, int pbu_type, int group_id)
 
 int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 {
-    oapv_bsw_write(bs, md->md_size, 32);
-    DUMP_HLS(metadata_size, md->md_size);
+    u8 *bs_pos_md;
+    bs_pos_md = oapv_bsw_sink(bs);
+
+    oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
+
     oapv_mdp_t *mdp = md->md_payload;
 
     while(mdp != NULL) {
@@ -778,7 +781,113 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 
         mdp = mdp->next;
     }
+    u32 md_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_md) - 4;
+    oapv_bsw_write_direct(bs_pos_md, md_size, 32);
+    DUMP_HLS(metadata_size, md_size);
+
     return OAPV_OK;
+}
+
+static __inline int get_vlc_rate(int val, int k)
+{
+    if (val < 100 && k < 5)
+    {
+        return CODE_LUT_100[val][k][1];
+    }
+
+    int code_len = 0;
+    code_len++;
+    if (val < (1 << k))
+    {
+        code_len += k;
+    }
+    else
+    {
+        val -= (1 << k);
+        code_len++;
+        if (val < (1 << k))
+        {
+            code_len += k;
+        }
+        else
+        {
+            val -= (1 << k);
+            while (val >= (1 << k))
+            {
+                code_len++;
+                val -= (1 << k);
+                k++;
+            }
+            code_len += k + 1;
+        }
+    }
+
+    return code_len;
+}
+
+double oapve_vlc_get_level_cost(int coef, int k, double lambda)
+{
+    s32 rate = 0;
+    rate = get_vlc_rate(coef, k);
+    if (coef)
+        rate += 1; // sign
+    return (rate * lambda);
+}
+
+double oapve_vlc_get_run_cost(int run, int k, double lambda)
+{
+    s32 rate = 0;
+    rate = get_vlc_rate(run, k);
+    return (rate * lambda);
+}
+
+int oapve_vlc_get_coef_rate(oapve_core_t* core, s16* coef, int c)
+{
+    int rate = 0;
+    int rice_run = 0;
+    int prev_run = 0;
+
+    // DC
+    int level = oapv_abs32(coef[0] - core->prev_dc[c]);
+    int rice_level = oapv_abs32(core->prev_dc_ctx[c]) >> 1;
+    rice_level = oapv_clip3(OAPV_KPARAM_DC_MIN, OAPV_KPARAM_DC_MAX, rice_level);
+    rate += get_vlc_rate(level, rice_level);
+    if(level) {
+        rate++;
+    }
+
+    u32 num_coeff = OAPV_BLK_D, scan_pos, run = 0;
+    const u8* scanp = oapv_tbl_scan;
+
+    // AC
+    rice_level = oapv_abs32(core->prev_1st_ac_ctx[c]) >> 2;
+    for(scan_pos = 1; scan_pos < num_coeff; scan_pos++) {
+        int coef_cur = coef[scanp[scan_pos]];
+        if(coef_cur) {
+            level = oapv_abs16(coef_cur);
+            rice_run = oapv_min(prev_run >> 2, 2);
+            rice_level = oapv_clip3(OAPV_KPARAM_AC_MIN, OAPV_KPARAM_AC_MAX, rice_level);
+
+            rate += get_vlc_rate(run, rice_run);
+            rate += get_vlc_rate(level - 1, rice_level);
+            if(level) {
+                rate++;
+            }
+
+            prev_run = run;
+            run = 0;
+            rice_level = level >> 2;
+        }
+        else {
+            run++;
+        }
+    }
+    if(run != 0) {
+        rice_run = oapv_min(prev_run >> 2, 2);
+        rate += get_vlc_rate(run, rice_run);
+    }
+
+    return rate;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1333,27 +1442,31 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         oapv_assert_gv(payload_size <= metadata_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
 
         if(payload_size > 0) {
+            oapv_assert_gv(BSR_GET_LEFT_BYTE(bs) >= payload_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
+            payload_data = oapv_bsr_sink(bs);
 
-            payload_data = oapv_malloc(payload_size);
-            oapv_assert_gv(payload_data != NULL, ret, OAPV_ERR_OUT_OF_MEMORY, ERR);
             if(payload_type == OAPV_METADATA_FILLER) {
-                for(u32 i = 0; i < payload_size; i++) {
+                for(int i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
                     DUMP_HLS(payload_data, t0);
                     oapv_assert_gv(t0 == 0xFF, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-                    payload_data[i] = 0xFF;
                 }
             }
             else {
-                for(u32 i = 0; i < payload_size; i++) {
+#if ENC_DEC_DUMP
+                for(int i = 0; i < payload_size; i++) {
                     t0 = oapv_bsr_read(bs, 8);
                     DUMP_HLS(payload_data, t0);
-                    payload_data[i] = t0;
                 }
+#else
+                BSR_MOVE_BYTE_ALIGN(bs, payload_size);
+#endif
             }
         }
-        ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size,
-                        payload_type == OAPV_METADATA_USER_DEFINED ? payload_data : NULL);
+        else {
+            payload_data = NULL;
+        }
+        ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
         metadata_size -= payload_size;
     }
@@ -1363,7 +1476,6 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
     return OAPV_OK;
 
 ERR:
-    // TO-DO: free memory
     return ret;
 }
 
