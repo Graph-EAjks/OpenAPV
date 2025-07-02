@@ -174,6 +174,9 @@ void oapv_trace_line(char *pre);
 
 void *oapv_malloc_align32(int size);
 void oapv_mfree_align32(void *p);
+#if X86_SSE
+void *oapv_memset_x128_avx(void* dst, int value, size_t size);
+#endif
 
 #define oapv_mcpy(dst, src, size)    memcpy((dst), (src), (size))
 #define oapv_mset(dst, v, size)      memset((dst), (v), (size))
