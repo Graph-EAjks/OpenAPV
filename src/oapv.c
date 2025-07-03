@@ -472,7 +472,7 @@ static double enc_block_rdo_slow(oapve_ctx_t *ctx, oapve_core_t *core, int log2_
     return best_cost;
 }
 
-#define OAPV_FULL_RDO_MAX_CAND 6 
+#define OAPV_FULL_RDO_MAX_CAND 6
 
 typedef struct oapve_coef_info oapve_coef_info_t;
 struct oapve_coef_info
@@ -543,7 +543,7 @@ static double enc_block_rdo_placebo(oapve_ctx_t* ctx, oapve_core_t* core, int lo
     for(int itr = 0; itr < 3; itr++) {
         int list_cnt = 0;
         oapve_coef_info_t coef_list[OAPV_FULL_RDO_MAX_CAND] = { 0 };
-        
+
         for(int j = 0; j < OAPV_BLK_D; j++) {
             s16 org_coef = best_coeff[scanp[j]];
             int adj_rng = org_coef == 0 ? 3 : 2;
@@ -612,6 +612,11 @@ static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
     oapv_assert_rv(param->w > 0 && param->h > 0, OAPV_ERR_INVALID_ARGUMENT);
     oapv_assert_rv((param->qp >= MIN_QUANT && param->qp <= MAX_QUANT(10)) || param->qp == OAPVE_PARAM_QP_AUTO, OAPV_ERR_INVALID_ARGUMENT);
 
+    oapv_assert_rv(param->profile_idc == OAPV_PROFILE_422_10 ||
+                   param->profile_idc == OAPV_PROFILE_400_10 ||
+                   param->profile_idc == OAPV_PROFILE_422_12, OAPV_ERR_UNSUPPORTED);
+
+
     ctx->qp_offset[Y_C] = 0;
     ctx->qp_offset[U_C] = param->qp_offset_c1;
     ctx->qp_offset[V_C] = param->qp_offset_c2;
@@ -642,8 +647,9 @@ static int enc_read_param(oapve_ctx_t *ctx, oapve_param_t *param)
     ctx->w = oapv_div_round_up(param->w, OAPV_MB_W) * OAPV_MB_W;
     ctx->h = oapv_div_round_up(param->h, OAPV_MB_H) * OAPV_MB_H;
 
-    enc_set_tile_info(ctx->tile, ctx->w, ctx->h, ctx->param->tile_w, ctx->param->tile_h, &ctx->num_tile_cols, &ctx->num_tile_rows, &ctx->num_tiles);
+    enc_set_tile_info(ctx->tile, ctx->w, ctx->h, param->tile_w, param->tile_h, &ctx->num_tile_cols, &ctx->num_tile_rows, &ctx->num_tiles);
 
+    ctx->param = param; // copy current param
     return OAPV_OK;
 }
 
@@ -1039,8 +1045,6 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapv_imgb_t *imgb_i, oapv_imgb_t *i
         ctx->fn_img_pad = enc_img_pad;
     }
 
-    /* initialize bitstream container */
-    // oapv_bsw_init(&ctx->bs, bitb->addr, bitb->bsize, NULL); // TODO : remove
     ctx->w = (imgb_i->aw[Y_C] > 0) ? imgb_i->aw[Y_C] : imgb_i->w[Y_C];
     ctx->h = (imgb_i->ah[Y_C] > 0) ? imgb_i->ah[Y_C] : imgb_i->h[Y_C];
 
@@ -1088,9 +1092,8 @@ static int enc_frm_finish(oapve_ctx_t *ctx, oapve_stat_t *stat)
     return OAPV_OK;
 }
 
-static int enc_frame(oapve_ctx_t *ctx)
+static int enc_frame(oapve_ctx_t *ctx, oapv_bs_t *bs)
 {
-    oapv_bs_t *bs = &ctx->bs;
     int        ret = OAPV_OK;
 
     oapv_bs_t  bs_fh;
@@ -1147,8 +1150,8 @@ static int enc_frame(oapve_ctx_t *ctx)
     /****************************************************/
 
     for(int i = 0; i < ctx->num_tiles; i++) {
-        oapv_mcpy(ctx->bs.cur, ctx->tile[i].bs_buf, ctx->tile[i].bs_size);
-        ctx->bs.cur = ctx->bs.cur + ctx->tile[i].bs_size;
+        oapv_mcpy(bs->cur, ctx->tile[i].bs_buf, ctx->tile[i].bs_size);
+        bs->cur = bs->cur + ctx->tile[i].bs_size;
         ctx->fh.tile_size[i] = ctx->tile[i].bs_size - OAPV_TILE_SIZE_LEN;
     }
 
@@ -1266,6 +1269,7 @@ void oapve_delete(oapve_t eid)
 
 int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb, oapve_stat_t *stat, oapv_frms_t *rfrms)
 {
+    oapv_bs_t    bsw;
     oapve_ctx_t *ctx;
     oapv_frm_t  *frm;
     oapv_bs_t   *bs, bs_pbu_beg;
@@ -1275,7 +1279,7 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     ctx = enc_id_to_ctx(eid);
     oapv_assert_rv(ctx != NULL && bitb->addr && bitb->bsize > 0, OAPV_ERR_INVALID_ARGUMENT);
 
-    bs = &ctx->bs;
+    bs = &bsw;
 
     oapv_bsw_init(bs, bitb->addr, bitb->bsize, NULL);
     oapv_mset(stat, 0, sizeof(oapve_stat_t));
@@ -1288,20 +1292,16 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     oapv_bsw_write(bs, 0x61507631, 32); // signature ('aPv1')
 
     for(i = 0; i < ifrms->num_frms; i++) {
-        frm = &ifrms->frm[i];
-
-        /* set default value for encoding parameter */
-        ctx->param = &ctx->cdesc.param[i];
-        ret = enc_read_param(ctx, ctx->param);
-        oapv_assert_rv(ret == OAPV_OK, ret);
-        oapv_assert_rv(ctx->param->profile_idc == OAPV_PROFILE_422_10 ||
-                       ctx->param->profile_idc == OAPV_PROFILE_400_10 ||
-                       ctx->param->profile_idc == OAPV_PROFILE_422_12, OAPV_ERR_UNSUPPORTED);
+        /* set default value for new encoding parameter */
+        ret = enc_read_param(ctx, &ctx->cdesc.param[i]);
+        oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
         // prepare for encoding a frame
+        frm = &ifrms->frm[i];
         ret = enc_frm_prepare(ctx, frm->imgb, (rfrms != NULL) ? rfrms->frm[i].imgb : NULL);
-        oapv_assert_rv(ret == OAPV_OK, ret);
+        oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
+        // write headers
         bs_pos_pbu_beg = oapv_bsw_sink(bs);            /* store pbu pos to calculate size */
         oapv_mcpy(&bs_pbu_beg, bs, sizeof(oapv_bs_t)); /* store pbu pos of ai to re-write */
 
@@ -1309,8 +1309,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         oapve_vlc_pbu_size(bs, 0);
         oapve_vlc_pbu_header(bs, frm->pbu_type, frm->group_id);
         // encode a frame
-        ret = enc_frame(ctx);
-        oapv_assert_rv(ret == OAPV_OK, ret);
+        ret = enc_frame(ctx, bs);
+        oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
         // rewrite pbu_size
         int pbu_size = ((u8 *)oapv_bsw_sink(bs)) - bs_pos_pbu_beg - 4;
@@ -1338,6 +1338,7 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     }
     stat->aui.num_frms = ifrms->num_frms;
 
+    // encoding metadata
     oapvm_ctx_t *md_list = mid;
     if(md_list != NULL) {
         int num_md = md_list->num;
@@ -1365,8 +1366,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         oapv_bsw_write_direct(bs_pos_au_beg, au_size, 32);
     }
 
-    oapv_bsw_deinit(&ctx->bs); /* de-init BSW */
-    stat->write = bsw_get_write_byte(&ctx->bs);
+    oapv_bsw_deinit(bs); /* de-init BSW */
+    stat->write = bsw_get_write_byte(bs);
 
     return OAPV_OK;
 }

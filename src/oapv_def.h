@@ -293,7 +293,6 @@ struct oapve_ctx {
     oapv_sync_obj_t           sync_obj;
     oapve_core_t             *core[OAPV_MAX_THREADS];
 
-    oapv_bs_t                 bs;
     const oapv_fn_itx_part_t *fn_itx_part;
     const oapv_fn_itx_t      *fn_itx;
     const oapv_fn_itx_adj_t  *fn_itx_adj;
