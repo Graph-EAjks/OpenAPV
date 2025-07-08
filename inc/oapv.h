@@ -112,6 +112,7 @@ extern "C" {
 #define OAPV_ERR_INVALID_WIDTH          (-405) /* invalid width (like odd) */
 #define OAPV_ERR_INVALID_HEIGHT         (-406)
 #define OAPV_ERR_INVALID_QP             (-410)
+#define OAPV_ERR_INVALID_FAMILY         (-501) /* invalid family number */
 #define OAPV_ERR_UNKNOWN                (-32767) /* unknown error */
 
 /* return value checking */
@@ -234,7 +235,16 @@ extern "C" {
  *****************************************************************************/
 #define OAPV_PROFILE_422_10             (33)
 #define OAPV_PROFILE_422_12             (44)
+#define OAPV_PROFILE_444_10             (55)
 #define OAPV_PROFILE_400_10             (99)
+
+/*****************************************************************************
+ * family
+ *****************************************************************************/
+#define OAPV_FAMILY_422_LQ              (1)
+#define OAPV_FAMILY_422_SQ              (2)
+#define OAPV_FAMILY_422_HQ              (3)
+#define OAPV_FAMILY_444_HQ              (4)
 
 /*****************************************************************************
  * optimization level control
@@ -432,8 +442,9 @@ struct oapv_dict_str_int {
 
 static const oapv_dict_str_int_t oapv_param_opts_profile[] = {
     {"422-10", OAPV_PROFILE_422_10},
-    {"400-10", OAPV_PROFILE_400_10},
     {"422-12", OAPV_PROFILE_422_12},
+    {"444-10", OAPV_PROFILE_444_10},
+    {"400-10", OAPV_PROFILE_400_10},
     {"", 0} // termination
 };
 
@@ -677,6 +688,7 @@ OAPV_EXPORT int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms,
  * interface for utility
  *****************************************************************************/
 OAPV_EXPORT int oapvd_info(void *au, int au_size, oapv_au_info_t *aui);
+OAPV_EXPORT int oapve_family_bitrate(int family, int w, int h, int fps_num, int fps_den, int * kbps);
 
 /*****************************************************************************
  * openapv version
