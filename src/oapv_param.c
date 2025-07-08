@@ -539,7 +539,7 @@ static float get_key_bitrate(int w, int h)
 
 int oapve_family_bitrate(int family, int w, int h, int fps_num, int fps_den, int * kbps)
 {
-    float key, ratio, fps;
+    float key, ratio;
 
     switch(family) {
     case OAPV_FAMILY_422_LQ:
