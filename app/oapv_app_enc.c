@@ -560,8 +560,6 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
 
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_w);
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-h", vars->tile_h);
-
-    param->csp = vars->input_csp;
     return 0;
 }
 

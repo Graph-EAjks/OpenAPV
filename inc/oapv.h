@@ -554,8 +554,6 @@ struct oapve_param {
     /* use quantization matrix */
     int           use_q_matrix;
     unsigned char q_matrix[OAPV_MAX_CC][OAPV_BLK_D]; // raster-scan order
-    /* color space */
-    int           csp;
     /* NOTE: tile_w and tile_h value can be changed internally,
              if the values are not set properly.
              the min and max values are defeind in APV specification */
