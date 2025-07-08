@@ -129,14 +129,14 @@ void *oapv_memset_x128_avx(void* dst, int value, size_t size) {
     size_t i = 0;
     // Store 128 units per iteration
     for(; i + 128 < size; i += 128) {
-        _mm_store_si128((__m128i*)(ptr +   0), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  16), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  32), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  48), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  64), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  80), value_vec);
-        _mm_store_si128((__m128i*)(ptr +  96), value_vec);
-        _mm_store_si128((__m128i*)(ptr + 112), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +   0), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  16), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  32), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  48), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  64), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  80), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i +  96), value_vec);
+        _mm_store_si128((__m128i*)(ptr + i + 112), value_vec);
     }
     // Remaining full 16-unit blocks
     for (; i + 16 < size; i += 16) {
