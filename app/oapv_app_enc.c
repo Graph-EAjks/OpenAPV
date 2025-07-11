@@ -875,8 +875,11 @@ int main(int argc, const char **argv)
     memset(&ifrms, 0, sizeof(oapv_frm_t));
     memset(&rfrms, 0, sizeof(oapv_frm_t));
 
-    int codec_depth = (param->profile_idc == OAPV_PROFILE_422_10 || param->profile_idc == OAPV_PROFILE_400_10) ? 10 :
-                       param->profile_idc == OAPV_PROFILE_422_12 ? 12 : 0;
+    int codec_depth = (param->profile_idc == OAPV_PROFILE_422_10 ||
+        param->profile_idc == OAPV_PROFILE_400_10 ||
+        param->profile_idc == OAPV_PROFILE_4444_10) ? 10 :
+        (param->profile_idc == OAPV_PROFILE_422_12) ? 12 : 0;
+
     if (codec_depth == 0) {
         logerr("ERR: invalid profile\n");
         ret = -1;
