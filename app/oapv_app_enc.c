@@ -529,9 +529,9 @@ static void print_stat_au(oapve_stat_t *stat, int au_cnt, oapve_param_t *param, 
     }
 }
 
-static void print_stat_frms(oapve_stat_t *stat, oapv_frms_t *ifrms, oapv_frms_t *rfrms, int cfmt, double psnr_avg[MAX_NUM_FRMS][MAX_NUM_CC])
+static void print_stat_frms(oapve_stat_t *stat, oapv_frms_t *ifrms, oapv_frms_t *rfrms, double psnr_avg[MAX_NUM_FRMS][MAX_NUM_CC])
 {
-    int              i, j;
+    int              i, j, cfmt;
     oapv_frm_info_t *finfo;
     double           psnr[MAX_NUM_FRMS][MAX_NUM_CC] = { 0 };
 
@@ -563,6 +563,9 @@ static void print_stat_frms(oapve_stat_t *stat, oapv_frms_t *ifrms, oapv_frms_t 
                                  : finfo[i].pbu_type == OAPV_PBU_TYPE_DEPTH_FRAME ? "DEPTH"
                                  : finfo[i].pbu_type == OAPV_PBU_TYPE_ALPHA_FRAME ? "ALPHA"
                                  : "UNKNOWN";
+
+        cfmt = OAPV_CS_GET_FORMAT(finfo[i].cs);
+
         // clang-format on
         if (cfmt == OAPV_CF_YCBCR400) { // 1 channel
             logv3("- FRM %-2d GID %-5d %-11s %9d-bytes %8.4fdB\n",
@@ -1006,7 +1009,7 @@ int main(int argc, const char **argv)
                         goto ERR;
                     }
                 }
-                print_stat_frms(&stat, &ifrms, &rfrms, cfmt, psnr_avg);
+                print_stat_frms(&stat, &ifrms, &rfrms, psnr_avg);
                 frm_cnt[fidx] += 1;
             }
             au_cnt++;
