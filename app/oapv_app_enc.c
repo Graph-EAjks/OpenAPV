@@ -889,6 +889,7 @@ int main(int argc, const char **argv)
 
     int codec_depth = (param->profile_idc == OAPV_PROFILE_422_10 ||
         param->profile_idc == OAPV_PROFILE_400_10 ||
+        param->profile_idc == OAPV_PROFILE_444_10 ||
         param->profile_idc == OAPV_PROFILE_4444_10) ? 10 :
         (param->profile_idc == OAPV_PROFILE_422_12) ? 12 : 0;
 
