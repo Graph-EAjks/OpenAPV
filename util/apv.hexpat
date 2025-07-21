@@ -69,7 +69,7 @@ struct PbuBase {
     }
     */
 
-    u32 pbu_size; // originally, this syntax is part of AuccessUnit
+    u32 pbu_size; // originally, this syntax is part of AccessUnit
     u8 pbu_type;
     u16 group_id;
     u8 reserved_zero_8bits;
@@ -218,8 +218,7 @@ struct MetadataPayload_Cll:MetadataPayload_Base {
 
 struct MetadataPayload_Filler:MetadataPayload_Base {
     mtype_str ="Filler";
-    u16 max_cll;
-    u16 max_fall;
+    u8 ff_byte[payloadSize] [[sealed]];
 };
 
 struct MetadataPayload_Userdefined:MetadataPayload_Base {
