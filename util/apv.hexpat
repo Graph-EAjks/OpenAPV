@@ -190,9 +190,9 @@ struct MetadataPayload_T35:MetadataPayload_Base {
     u8 itu_t_t35_country_code;
     if (itu_t_t35_country_code == 0xFF) {
         u8 itu_t_t35_country_code_extension;
-        u8 itu_t_t35_payload[payloadSize - 2];
+        u8 itu_t_t35_payload[payloadSize - 2][[sealed]];
     } else {
-        u8 itu_t_t35_payload[payloadSize - 1];
+        u8 itu_t_t35_payload[payloadSize - 1][[sealed]];
     }
 };
 
