@@ -776,7 +776,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
     int  mb_h, mb_w, mb_y, mb_x, blk_x, blk_y;
     s16 *o16 = NULL, *r16 = NULL;
 
-    u8  *bs_cur = oapv_bsw_sink(bs);
+    u8  *bs_cur = oapv_bsw_flush(bs);
     oapv_assert_rv(bsw_is_align8(bs), OAPV_ERR_MALFORMED_BITSTREAM);
 
     mb_w = OAPV_MB_W >> ctx->comp_sft[c][0];
@@ -813,16 +813,14 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
         oapv_bsw_write1(bs, 0);
     }
 
-    /* de-init BSW */
-    oapv_bsw_deinit(bs);
-
-    return (int)(bs->cur - bs_cur);
+    int tile_data_size = (int)((u8 *)oapv_bsw_flush(bs) - bs_cur);
+    return tile_data_size;
 }
 
 static int enc_tile(oapve_ctx_t *ctx, oapve_core_t *core, oapve_tile_t *tile)
 {
     oapv_bs_t bs;
-    oapv_bsw_init(&bs, tile->bs_buf, tile->bs_buf_max, NULL);
+    oapv_bsw_init(&bs, tile->bs_buf, tile->bs_buf_max);
 
     int qp = 0;
     if(ctx->param->rc_type != OAPV_RC_CQP) {
@@ -906,14 +904,17 @@ static int enc_tile(oapve_ctx_t *ctx, oapve_core_t *core, oapve_tile_t *tile)
         tile->th.tile_data_size[c] = enc_tile_comp(&bs, tile, ctx, core, c, s_org, org, s_rec, rec);
     }
 
-    u32 bs_size = (int)(bs.cur - bs.beg);
+    u32 bs_size = bsw_get_write_byte(&bs);
     if(bs_size > tile->bs_buf_max) {
         return OAPV_ERR_OUT_OF_BS_BUF;
     }
     tile->bs_size = bs_size;
 
+    oapv_bsw_flush(&bs);
+
+    // re-write tile header
     oapv_bs_t bs_th;
-    oapv_bsw_init(&bs_th, tile->bs_buf, tile->bs_size, NULL);
+    oapv_bsw_init(&bs_th, tile->bs_buf, tile->bs_size);
     tile->tile_size = bs_size - OAPV_TILE_SIZE_LEN;
 
     DUMP_SAVE(1);
@@ -921,7 +922,7 @@ static int enc_tile(oapve_ctx_t *ctx, oapve_core_t *core, oapve_tile_t *tile)
     oapve_vlc_tile_size(&bs_th, tile->tile_size);
     oapve_vlc_tile_header(ctx, &bs_th, &tile->th);
     DUMP_LOAD(1);
-    oapv_bsw_deinit(&bs_th);
+    oapv_bsw_flush(&bs_th);
     return OAPV_OK;
 }
 
@@ -1116,16 +1117,15 @@ static int enc_frm_finish(oapve_ctx_t *ctx, oapve_stat_t *stat)
 static int enc_frame(oapve_ctx_t *ctx, oapv_bs_t *bs)
 {
     int        ret = OAPV_OK;
-
     oapv_bs_t  bs_fh;
-    oapv_mcpy(&bs_fh, bs, sizeof(oapv_bs_t));
+
+    oapv_bs_copy(bs, &bs_fh); // copy for fh writing again
 
     /* write frame header */
     oapve_set_frame_header(ctx, &ctx->fh);
-    oapve_vlc_frame_header(bs, ctx, &ctx->fh);
+    oapve_vlc_frame_header(bs, ctx, &ctx->fh); // temporary writing
 
-    /* de-init BSW */
-    oapv_bsw_deinit(bs);
+    oapv_bsw_flush(bs); // flush temporary bits
 
     /* rc init */
     u64 cost_sum = 0;
@@ -1179,8 +1179,7 @@ static int enc_frame(oapve_ctx_t *ctx, oapv_bs_t *bs)
     /* rewrite frame header */
     if(ctx->fh.tile_size_present_in_fh_flag) {
         oapve_vlc_frame_header(&bs_fh, ctx, &ctx->fh);
-        /* de-init BSW */
-        oapv_bsw_sink(&bs_fh);
+        oapv_bsw_flush(&bs_fh); // flush temporary bits
     }
     if(ctx->param->rc_type != 0) {
         oapve_rc_update_after_pic(ctx, cost_sum);
@@ -1302,10 +1301,10 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
 
     bs = &bsw;
 
-    oapv_bsw_init(bs, bitb->addr, bitb->bsize, NULL);
+    oapv_bsw_init(bs, bitb->addr, bitb->bsize);
     oapv_mset(stat, 0, sizeof(oapve_stat_t));
 
-    bs_pos_au_beg = oapv_bsw_sink(bs);
+    bs_pos_au_beg = oapv_bsw_flush(bs);
 
     if(ctx->au_bs_fmt == OAPV_CFG_VAL_AU_BS_FMT_RBAU) {
         oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
@@ -1319,8 +1318,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
         // write headers
-        bs_pos_pbu_beg = oapv_bsw_sink(bs);            /* store pbu pos to calculate size */
-        oapv_mcpy(&bs_pbu_beg, bs, sizeof(oapv_bs_t)); /* store pbu pos of ai to re-write */
+        bs_pos_pbu_beg = oapv_bsw_flush(bs); // store pbu pos to calculate size
+        oapv_bs_copy(bs, &bs_pbu_beg); // store pbu pos of ai to re-write
 
         DUMP_SAVE(0);
         oapve_vlc_pbu_size(bs, 0);
@@ -1330,7 +1329,7 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
         // rewrite pbu_size
-        int pbu_size = ((u8 *)oapv_bsw_sink(bs)) - bs_pos_pbu_beg - 4;
+        int pbu_size = ((u8 *)oapv_bsw_flush(bs)) - bs_pos_pbu_beg - 4;
         DUMP_SAVE(1);
         DUMP_LOAD(0);
         oapve_vlc_pbu_size(&bs_pbu_beg, pbu_size);
@@ -1361,8 +1360,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         int num_md = md_list->num;
         for(i = 0; i < num_md; i++) {
             int group_id = md_list->md_arr[i].group_id;
-            bs_pos_pbu_beg = oapv_bsw_sink(bs);            /* store pbu pos to calculate size */
-            oapv_mcpy(&bs_pbu_beg, bs, sizeof(oapv_bs_t)); /* store pbu pos of ai to re-write */
+            bs_pos_pbu_beg = oapv_bsw_flush(bs); // store pbu pos to calculate size
+            oapv_bs_copy(bs, &bs_pbu_beg); // store pbu pos of ai to re-write
             DUMP_SAVE(0);
 
             oapve_vlc_pbu_size(bs, 0);
@@ -1370,7 +1369,7 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
             oapve_vlc_metadata(&md_list->md_arr[i], bs);
 
             // rewrite pbu_size
-            int pbu_size = ((u8 *)oapv_bsw_sink(bs)) - bs_pos_pbu_beg - 4;
+            int pbu_size = ((u8 *)oapv_bsw_flush(bs)) - bs_pos_pbu_beg - 4;
             DUMP_SAVE(1);
             DUMP_LOAD(0);
             oapve_vlc_pbu_size(&bs_pbu_beg, pbu_size);
@@ -1379,11 +1378,10 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     }
 
     if(ctx->au_bs_fmt == OAPV_CFG_VAL_AU_BS_FMT_RBAU) {
-        u32 au_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_au_beg) - 4;
+        u32 au_size = (u32)((u8 *)oapv_bsw_flush(bs) - bs_pos_au_beg) - 4;
         oapv_bsw_write_direct(bs_pos_au_beg, au_size, 32);
     }
 
-    oapv_bsw_deinit(bs); /* de-init BSW */
     stat->write = bsw_get_write_byte(bs);
 
     return OAPV_OK;
@@ -1595,7 +1593,7 @@ static int dec_frm_prepare(oapvd_ctx_t *ctx, oapv_imgb_t *imgb)
     for(int i = 0; i < ctx->num_tiles; i++) {
         ctx->tile[i].bs_beg = NULL;
     }
-    ctx->tile[0].bs_beg = oapv_bsr_sink(&ctx->bs);
+    ctx->tile[0].bs_beg = oapv_bsr_flush(&ctx->bs);
 
     for(int i = 0; i < ctx->num_tiles; i++) {
         ctx->tile[i].stat = DEC_TILE_STAT_NOT_DECODED;
@@ -1669,7 +1667,7 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
     oapvd_ctx_t *ctx = core->ctx;
     oapv_bs_t    bs; // bs for 'tile()' syntax
 
-    oapv_bsr_init(&bs, tile->bs_beg + OAPV_TILE_SIZE_LEN, tile->data_size, NULL);
+    oapv_bsr_init(&bs, tile->bs_beg + OAPV_TILE_SIZE_LEN, tile->data_size);
     ret = oapvd_vlc_tile_header(&bs, ctx, &tile->th);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
@@ -1695,7 +1693,7 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
         s16 *dst;
         oapv_bs_t bsc; // bs for 'tile_data()' syntax
 
-        oapv_bsr_init(&bsc, BSR_GET_CUR(&bs), tile->th.tile_data_size[c], NULL);
+        oapv_bsr_init(&bsc, BSR_GET_CUR(&bs), tile->th.tile_data_size[c]);
 
         if(OAPV_CS_GET_FORMAT(ctx->imgb->cs) == OAPV_CF_PLANAR2) {
             tc = c > 0 ? 1 : 0;
@@ -1753,7 +1751,7 @@ static int dec_thread_tile(void *arg)
             oapv_tpool_leave_cs(ctx->sync_obj);
         }
         /* read tile size */
-        oapv_bsr_init(&bs, tile[tile_idx].bs_beg, OAPV_TILE_SIZE_LEN, NULL);
+        oapv_bsr_init(&bs, tile[tile_idx].bs_beg, OAPV_TILE_SIZE_LEN);
         ret = oapvd_vlc_tile_size(&bs, &tile[tile_idx].data_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
         oapv_assert_g(tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + (tile[tile_idx].data_size - 1) <= ctx->bs.end, ERR);
@@ -1970,7 +1968,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
         oapv_bs_t   *bs;
         u32 remain = bitb->ssize - cur_read_size;
         oapv_assert_gv((remain >= 8), ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-        oapv_bsr_init(&ctx->bs, (u8 *)bitb->addr + cur_read_size, remain, NULL);
+        oapv_bsr_init(&ctx->bs, (u8 *)bitb->addr + cur_read_size, remain);
         bs = &ctx->bs;
 
         ret = oapvd_vlc_pbu_size(bs, &pbu_size); // read pbu_size (4 byte)
@@ -2091,7 +2089,7 @@ int oapvd_info(void *au, int au_size, oapv_au_info_t *aui)
         u32 pbu_size = 0;
         u32 remain = au_size - cur_read_size;
         oapv_assert_rv(remain >= 8, OAPV_ERR_MALFORMED_BITSTREAM);
-        oapv_bsr_init(&bs, (u8 *)au + cur_read_size, remain, NULL);
+        oapv_bsr_init(&bs, (u8 *)au + cur_read_size, remain);
 
         ret = oapvd_vlc_pbu_size(&bs, &pbu_size); // read pbu_size (4 byte)
         oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);

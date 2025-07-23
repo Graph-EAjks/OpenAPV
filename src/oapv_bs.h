@@ -35,8 +35,6 @@
 #include "oapv_port.h"
 
 typedef struct oapv_bs oapv_bs_t;
-typedef int (*oapv_bs_fn_flush_t)(oapv_bs_t *bs, int byte);
-
 struct oapv_bs {
     u32                code;     // intermediate code buffer
     int                leftbits; // left bits count in code
@@ -44,15 +42,18 @@ struct oapv_bs {
     u8                *end;      // address of bitstream end
     u8                *beg;      // address of bitstream begin
     u32                size;     // size of input bitstream in byte
-    oapv_bs_fn_flush_t fn_flush; // function pointer for flush operation
     int                ndata[4]; // arbitrary data, if needs
     void              *pdata[4]; // arbitrary address, if needs
 };
+
+void oapv_bs_copy(oapv_bs_t *bs_src, oapv_bs_t *bs_dst);
 
 ///////////////////////////////////////////////////////////////////////////////
 // start of encoder code
 #if ENABLE_ENCODER
 ///////////////////////////////////////////////////////////////////////////////
+
+void *oapv_bsw_flush(oapv_bs_t *bs);
 
 static inline bool bsw_is_align8(oapv_bs_t *bs)
 {
@@ -61,12 +62,11 @@ static inline bool bsw_is_align8(oapv_bs_t *bs)
 
 static inline int bsw_get_write_byte(oapv_bs_t *bs)
 {
-    return (int)((u8 *)(bs->cur) - (u8 *)(bs->beg));
+    u8 * cur = (u8 *)oapv_bsw_flush(bs); // flush temporary bits
+    return (int)(cur - bs->beg);
 }
 
-void oapv_bsw_init(oapv_bs_t *bs, u8 *buf, int size, oapv_bs_fn_flush_t fn_flush);
-void oapv_bsw_deinit(oapv_bs_t *bs);
-void *oapv_bsw_sink(oapv_bs_t *bs);
+void oapv_bsw_init(oapv_bs_t *bs, u8 *buf, int size);
 int oapv_bsw_write_direct(void *addr, u32 val, int len);
 int oapv_bsw_write1(oapv_bs_t *bs, int val);
 int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len);
@@ -127,13 +127,13 @@ should set zero in that case. */
     (bs)->code = 0; \
     (bs)->leftbits = 0;
 
-void oapv_bsr_init(oapv_bs_t *bs, u8 *buf, u32 size, oapv_bs_fn_flush_t fn_flush);
+void oapv_bsr_init(oapv_bs_t *bs, u8 *buf, u32 size);
 int oapv_bsr_clz_in_code(u32 code);
 int oapv_bsr_clz(oapv_bs_t *bs);
 void oapv_bsr_align8(oapv_bs_t *bs);
 void oapv_bsr_skip(oapv_bs_t *bs, int size);
 u32 oapv_bsr_peek(oapv_bs_t *bs, int size);
-void *oapv_bsr_sink(oapv_bs_t *bs);
+void *oapv_bsr_flush(oapv_bs_t *bs);
 void oapv_bsr_move(oapv_bs_t *bs, u8 *pos);
 u32 oapv_bsr_read(oapv_bs_t *bs, int size);
 int oapv_bsr_read1(oapv_bs_t *bs);

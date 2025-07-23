@@ -442,7 +442,7 @@ int oapve_vlc_pbu_header(oapv_bs_t *bs, int pbu_type, int group_id)
 int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 {
     u8 *bs_pos_md;
-    bs_pos_md = oapv_bsw_sink(bs);
+    bs_pos_md = oapv_bsw_flush(bs);
 
     oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
 
@@ -475,7 +475,7 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
 
         mdp = mdp->next;
     }
-    u32 md_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_md) - 4;
+    u32 md_size = (u32)((u8 *)oapv_bsw_flush(bs) - bs_pos_md) - 4;
     oapv_bsw_write_direct(bs_pos_md, md_size, 32);
     DUMP_HLS(metadata_size, md_size);
 
@@ -1132,7 +1132,7 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         oapv_assert_gv(payload_size <= metadata_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
 
         oapv_assert_gv(BSR_GET_LEFT_BYTE(bs) >= payload_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-        payload_data = oapv_bsr_sink(bs);
+        payload_data = oapv_bsr_flush(bs);
 #if ENC_DEC_DUMP
         for(int i = 0; i < payload_size; i++) {
             t0 = bs->cur[i];
