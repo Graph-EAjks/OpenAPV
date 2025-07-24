@@ -148,9 +148,9 @@ static u32 enc_vlc_write_to_code(oapv_bs_t *bs, int val, int k, int *nbits)
     return code;
 }
 
-static int enc_vlc_quantization_matrix(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
+static int enc_vlc_quantization_matrix(oapv_bs_t *bs, int num_comp, oapv_fh_t *fh)
 {
-    for(int cidx = 0; cidx < ctx->num_comp; cidx++) {
+    for(int cidx = 0; cidx < num_comp; cidx++) {
         for(int y = 0; y < 8; y++) {
             for(int x = 0; x < 8; x++) {
                 oapv_bsw_write(bs, fh->q_matrix[cidx][y][x], 8);
@@ -161,7 +161,7 @@ static int enc_vlc_quantization_matrix(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_
     return 0;
 }
 
-static int enc_vlc_tile_info(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
+static int enc_vlc_tile_info(oapv_bs_t *bs, int num_tiles, oapv_fh_t *fh)
 {
     oapv_bsw_write(bs, fh->tile_width_in_mbs, 20);
     DUMP_HLS(fh->tile_width_in_mbs, fh->tile_width_in_mbs);
@@ -170,7 +170,7 @@ static int enc_vlc_tile_info(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
     oapv_bsw_write(bs, fh->tile_size_present_in_fh_flag, 1);
     DUMP_HLS(fh->tile_size_present_in_fh_flag, fh->tile_size_present_in_fh_flag);
     if(fh->tile_size_present_in_fh_flag) {
-        for(int i = 0; i < ctx->num_tiles; i++) {
+        for(int i = 0; i < num_tiles; i++) {
             oapv_bsw_write(bs, fh->tile_size[i], 32);
             DUMP_HLS(fh->tile_size, fh->tile_size[i]);
         }
@@ -333,7 +333,7 @@ int oapve_vlc_frame_info(oapv_bs_t *bs, oapv_fi_t *fi)
     return OAPV_OK;
 }
 
-int oapve_vlc_frame_header(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
+int oapve_vlc_frame_header(oapve_ctx_t *ctx, oapv_bs_t *bs, oapv_fh_t *fh)
 {
     oapv_assert_rv(bsw_is_align8(bs), OAPV_ERR_MALFORMED_BITSTREAM);
 
@@ -355,9 +355,9 @@ int oapve_vlc_frame_header(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
     oapv_bsw_write1(bs, fh->use_q_matrix);
     DUMP_HLS(fh->use_q_matrix, fh->use_q_matrix);
     if(fh->use_q_matrix) {
-        enc_vlc_quantization_matrix(bs, ctx, fh);
+        enc_vlc_quantization_matrix(bs, ctx->num_comp, fh);
     }
-    enc_vlc_tile_info(bs, ctx, fh);
+    enc_vlc_tile_info(bs, ctx->num_tiles, fh);
 
     oapv_bsw_write(bs, 0, 8); // reserved_zero_8bits
     DUMP_HLS(reserved_zero, 0);
@@ -407,7 +407,7 @@ int oapve_vlc_au_info(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_frms_t *frms, oapv_b
         DUMP_HLS(group_id, frms->frm[fidx].group_id);
         oapv_bsw_write(bs, 0, 8);
         DUMP_HLS(reserved_zero_8bits, 0);
-        memcpy(*(bs_fi_pos + sizeof(oapv_bs_t) * fidx), bs, sizeof(oapv_bs_t)); /* store fi pos in au to re-write */
+        oapv_mcpy(*(bs_fi_pos + sizeof(oapv_bs_t) * fidx), bs, sizeof(oapv_bs_t)); /* store fi pos in au to re-write */
         oapve_vlc_frame_info(bs, &ctx->fh.fi);
     }
 
@@ -1087,7 +1087,7 @@ int oapvd_vlc_tile_header(oapv_bs_t *bs, oapvd_ctx_t *ctx, oapv_th_t *th)
 
 int oapvd_vlc_tile_dummy_data(oapv_bs_t *bs)
 {
-    while(bs->cur < bs->end) {
+    while(BSR_GET_LEFT_BYTE(bs) > 0) {
         oapv_bsr_read(bs, 8);
     }
     return OAPV_OK;

@@ -70,6 +70,7 @@ void oapv_bsw_init(oapv_bs_t *bs, u8 *buf, int size);
 int oapv_bsw_write_direct(void *addr, u32 val, int len);
 int oapv_bsw_write1(oapv_bs_t *bs, int val);
 int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len);
+void oapv_bsw_move(oapv_bs_t *bs, u8 *pos);
 ///////////////////////////////////////////////////////////////////////////////
 // end of encoder code
 #endif // ENABLE_ENCODER
@@ -117,9 +118,6 @@ should set zero in that case. */
 /* get number of bit consumed */
 #define BSR_GET_READ_BIT(bs) \
     (((int)((bs)->cur - (bs)->beg) << 3) - ((bs)->leftbits))
-
-/* get address of current reading */
-#define BSR_GET_CUR(bs) ((bs)->cur - (((bs)->leftbits + 7) >> 3))
 
 /* move to # bytes align position */
 #define BSR_MOVE_BYTE_ALIGN(bs, byte) \

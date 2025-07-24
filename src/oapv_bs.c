@@ -125,6 +125,14 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len) /* len(1 ~ 32) */
     return 0;
 }
 
+void oapv_bsw_move(oapv_bs_t *bs, u8 *pos)
+{
+    bs->code = 0;
+    bs->leftbits = 32;
+    bs->cur = pos;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // end of encoder code
 #endif // ENABLE_ENCODER
