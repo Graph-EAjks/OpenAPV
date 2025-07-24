@@ -1095,17 +1095,23 @@ int oapvd_vlc_tile_dummy_data(oapv_bs_t *bs)
 
 int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
 {
-    int ret;
+    int ret, filler_size;
     u32 t0;
     u32 metadata_size;
+    u8 *payload_data = NULL;
+
+    // reduce pbu_size amount of (PBU header size + metadata_size syntax size)
+    pbu_size -= (OAPV_PBUH_LEN + 4);
     metadata_size = oapv_bsr_read(bs, 32);
     DUMP_HLS(metadata_size, metadata_size);
-    oapv_assert_gv(pbu_size >= 8 && metadata_size <= (pbu_size - 8), ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-    u8 *bs_start_pos = bs->cur;
-    u8 *payload_data = NULL;
+    oapv_assert_gv(pbu_size >= 0 && metadata_size <= pbu_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
+
+    filler_size = pbu_size - metadata_size;
 
     while(metadata_size > 0) {
         u32 payload_type = 0, payload_size = 0;
+
+        // parsing payload type
         t0 = 0;
         do {
             t0 = oapv_bsr_read(bs, 8);
@@ -1118,6 +1124,7 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
         } while(t0 == 0xFF);
         payload_type += t0;
 
+        // parsing payload size
         t0 = 0;
         do {
             t0 = oapv_bsr_read(bs, 8);
@@ -1129,28 +1136,38 @@ int oapvd_vlc_metadata(oapv_bs_t *bs, u32 pbu_size, oapvm_t mid, int group_id)
             }
         } while(t0 == 0xFF);
         payload_size += t0;
+
         oapv_assert_gv(payload_size <= metadata_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
 
         oapv_assert_gv(BSR_GET_LEFT_BYTE(bs) >= payload_size, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-        payload_data = oapv_bsr_flush(bs);
+
+        if(payload_size == 0) {
+            payload_data = NULL;
+        }
+        else {
+            payload_data = oapv_bsr_flush(bs);
+        }
+
 #if ENC_DEC_DUMP
         for(int i = 0; i < payload_size; i++) {
-            t0 = bs->cur[i];
+            t0 = payload_data[i];
             DUMP_HLS(payload_data, t0);
         }
 #endif
-        if (payload_size == 0) {
-            payload_data = NULL;
-        }
-        BSR_MOVE_BYTE_ALIGN(bs, payload_size);
         ret = oapvm_set(mid, group_id, payload_type, payload_data, payload_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
+
+        if(payload_size > 0) {
+            oapv_bsr_move(bs, payload_data + payload_size);
+        }
         metadata_size -= payload_size;
     }
-    const u32 target_read_size = (pbu_size - 8);
-    oapv_assert_gv(target_read_size >= (bs->cur - bs_start_pos), ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
-    ret = oapvd_vlc_filler(bs, target_read_size - (bs->cur - bs_start_pos));
-    oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
+    oapv_assert_gv(metadata_size == 0, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
+
+    if(filler_size) {
+        ret = oapvd_vlc_filler(bs, filler_size);
+        oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
+    }
     return OAPV_OK;
 
 ERR:

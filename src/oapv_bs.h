@@ -119,12 +119,6 @@ should set zero in that case. */
 #define BSR_GET_READ_BIT(bs) \
     (((int)((bs)->cur - (bs)->beg) << 3) - ((bs)->leftbits))
 
-/* move to # bytes align position */
-#define BSR_MOVE_BYTE_ALIGN(bs, byte) \
-    (bs)->cur += (byte) - ((bs)->leftbits >> 3); \
-    (bs)->code = 0; \
-    (bs)->leftbits = 0;
-
 void oapv_bsr_init(oapv_bs_t *bs, u8 *buf, u32 size);
 int oapv_bsr_clz_in_code(u32 code);
 int oapv_bsr_clz(oapv_bs_t *bs);

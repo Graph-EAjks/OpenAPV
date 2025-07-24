@@ -87,6 +87,8 @@
 /*****************************************************************************
  * PBU data structure
  *****************************************************************************/
+#define OAPV_PBUH_LEN            (4)
+
 typedef struct oapv_pbuh oapv_pbuh_t;
 struct oapv_pbuh { // 4-byte
     int pbu_type;  /* u( 8) */
@@ -407,9 +409,6 @@ struct oapvd_ctx {
 // end of decoder code
 #endif // ENABLE_DECODER
 ///////////////////////////////////////////////////////////////////////////////
-
-#define OAPV_FRAME_INFO_BYTE (112)
-#define OAPV_PBU_HEADER_BYTE (32)
 
 #include "oapv_metadata.h"
 #include "oapv_vlc.h"
