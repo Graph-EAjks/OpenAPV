@@ -144,7 +144,8 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         ARGS_NO_KEY,  "band", ARGS_VAL_TYPE_STRING, 0, NULL,
-        "band setting (0, 1, 2, 3)"
+        "band setting (0, 1, 2, 3)\n"
+        "      - 'auto' means that the value is internally determined"
     },
     {
         ARGS_NO_KEY,  "max-au", ARGS_VAL_TYPE_INTEGER, 0, NULL,
@@ -281,7 +282,7 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     args_set_variable_by_key_long(opts, "level", vars->level);
     strcpy(vars->level, "auto"); /* default */
     args_set_variable_by_key_long(opts, "band", vars->band);
-    strcpy(vars->band, "2"); /* default */
+    strcpy(vars->band, "auto"); /* default */
 
     args_set_variable_by_key_long(opts, "width", vars->width);
     args_set_variable_by_key_long(opts, "height", vars->height);

@@ -534,6 +534,7 @@ static const oapv_dict_str_int_t oapv_param_opts_color_matrix[] = {
  *****************************************************************************/
 #define OAPV_LEVEL_TO_LEVEL_IDC(level)   (int)(((level) * 30.0) + 0.5)
 #define OAPVE_PARAM_LEVEL_IDC_AUTO       (0)
+#define OAPVE_PARAM_BAND_IDC_AUTO        (4)
 #define OAPVE_PARAM_QP_AUTO              (255)
 
 typedef struct oapve_param oapve_param_t;
