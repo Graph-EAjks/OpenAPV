@@ -510,10 +510,10 @@ int main(int argc, const char **argv)
 
             if(frm->imgb == NULL) {
                 if(args_var->output_csp == 1) {
-                    frm->imgb = imgb_create(finfo->w, finfo->h, OAPV_CS_SET(OAPV_CF_PLANAR2, 10, 0));
+                    frm->imgb = oapv_imgb_create(finfo->w, finfo->h, OAPV_CS_SET(OAPV_CF_PLANAR2, 10, 0));
                 }
                 else {
-                    frm->imgb = imgb_create(finfo->w, finfo->h, finfo->cs);
+                    frm->imgb = oapv_imgb_create(finfo->w, finfo->h, finfo->cs);
                 }
                 if(frm->imgb == NULL) {
                     logerr("ERR: cannot allocate image buffer (w:%d, h:%d, cs:%d)\n",
@@ -585,7 +585,7 @@ int main(int argc, const char **argv)
             if(ofrms.num_frms > 0) {
                 if(OAPV_CS_GET_BIT_DEPTH(frm->imgb->cs) != args_var->output_depth && args_var->output_csp != 1) {
                     if(imgb_w == NULL) {
-                        imgb_w = imgb_create(frm->imgb->w[0], frm->imgb->h[0],
+                        imgb_w = oapv_imgb_create(frm->imgb->w[0], frm->imgb->h[0],
                                              OAPV_CS_SET(OAPV_CS_GET_FORMAT(frm->imgb->cs), args_var->output_depth, 0));
                         if(imgb_w == NULL) {
                             logerr("ERR: cannot allocate image buffer (w:%d, h:%d, cs:%d)\n",
@@ -594,7 +594,7 @@ int main(int argc, const char **argv)
                             goto ERR;
                         }
                     }
-                    imgb_cpy(imgb_w, frm->imgb);
+                    oapv_imgb_cpy(imgb_w, frm->imgb);
                     imgb_o = imgb_w;
                 }
                 else {

@@ -702,6 +702,13 @@ OAPV_EXPORT int oapve_family_bitrate(int family, int w, int h, int fps_num, int 
  *****************************************************************************/
 OAPV_EXPORT const char *oapv_version(unsigned int *ver_num);
 
+/*****************************************************************************
+ * interface for oapv image
+ *****************************************************************************/
+OAPV_EXPORT oapv_imgb_t *oapv_imgb_create(int w, int h, int cs);
+OAPV_EXPORT void oapv_imgb_cpy(oapv_imgb_t *dst, oapv_imgb_t *src);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

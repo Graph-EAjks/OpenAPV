@@ -908,30 +908,30 @@ int main(int argc, const char **argv)
 
     for(int i = 0; i < num_frames; i++) {
         if(args_var->input_depth == codec_depth) {
-            ifrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
+            ifrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
         }
         else {
             if (cfmt == OAPV_CF_PLANAR2) {
-                ifrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
+                ifrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
             }
             else {
-                imgb_r = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
-                ifrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
+                imgb_r = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
+                ifrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
             }
         }
 
         if(is_rec) {
             if(args_var->input_depth == codec_depth) {
-                rfrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
+                rfrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
             }
             else {
                 if (cfmt == OAPV_CF_PLANAR2) {
-                    rfrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
+                    rfrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
                 }
                 else
                 {
-                    imgb_w = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
-                    rfrms.frm[i].imgb = imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
+                    imgb_w = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, args_var->input_depth, 0));
+                    rfrms.frm[i].imgb = oapv_imgb_create(param->w, param->h, OAPV_CS_SET(cfmt, codec_depth, 0));
                 }
             }
             rfrms.num_frms++;
@@ -956,7 +956,7 @@ int main(int argc, const char **argv)
                 break;
             }
             if(args_var->input_depth != codec_depth && cfmt != OAPV_CF_PLANAR2) {
-                imgb_cpy(ifrms.frm[i].imgb, imgb_i);
+                oapv_imgb_cpy(ifrms.frm[i].imgb, imgb_i);
             }
             ifrms.frm[i].group_id = 1; // FIX-ME : need to set properly in case of multi-frame
             ifrms.frm[i].pbu_type = OAPV_PBU_TYPE_PRIMARY_FRAME;
@@ -983,7 +983,7 @@ int main(int argc, const char **argv)
             for(int fidx = 0; fidx < num_frames; fidx++) {
                 if(is_rec) {
                     if(args_var->input_depth != codec_depth && cfmt != OAPV_CF_PLANAR2) {
-                        imgb_cpy(imgb_w, rfrms.frm[fidx].imgb);
+                        oapv_imgb_cpy(imgb_w, rfrms.frm[fidx].imgb);
                         imgb_o = imgb_w;
                     }
                     else {
