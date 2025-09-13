@@ -145,7 +145,7 @@ bitfield FrmHeader {
 
     FrmInfo finfo [[name("frame_info()")]];
     readbits += (12 * 8);
-    reserved_zero_8bits : 8;
+    reserved_zero_8bits_0 : 8;
     readbits += 8;
 
     u8 NumComps = get_num_comp(finfo.chroma_format_idc) [[export]];
@@ -211,6 +211,11 @@ bitfield FrmHeader {
         tile_size_in_fh : 32 * NumTiles;
         readbits += 32 * NumTiles;
     }
+
+	reserved_zero_8bits_1 : 8;
+	readbits += 8;
+
+	// byte_alignment(): 'bitfield' will align to byte at the end, automatically
 };
 
 struct PbuFrm:PbuBase {
