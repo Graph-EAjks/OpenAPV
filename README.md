@@ -57,7 +57,7 @@ The APV codec standard has the following features:
 
 - Build Instructions ARM (Crosscompile)
   ```
-  cmake -S . -B build-arm -DCMAKE_TOOLCHAIN_FILE=aarch64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+  cmake -S . -B build-arm -DCMAKE_TOOLCHAIN_FILE=arm64_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
   cmake --build build-arm
   ```
 
