@@ -11,8 +11,8 @@ The OpenAPV supports the following features:
 - Low complexity by optimization for ARM NEON and x86(64bit) SEE/AVX CPU
 - Tile-based multi-threading
 - Various metadata including HDR10/10+ and user-defined format
-- Constant QP (CQP) and average bitrate (ABR) are supported
-- [APV Family](/readme/apv_family.md) for standard configurations of the APV codec
+- Constant QP (CQP) and average bitrate (ABR) rate control algorithms
+- [APV Family](/readme/apv_family.md) configurations for typical target bitrate setting of encoder
 
 
 ## APV codec
