@@ -7,11 +7,12 @@ OpenAPV provides the reference implementation of the [APV codec](#apv-codec) whi
 
 The OpenAPV supports the following features:
 
-- fully compliant with 422-10 and 400-10 profile of [APV codec](#apv-codec)
+- fully compliant with 422-10, 422-12, 444-10, 444-12, 4444-10, 4444-12, and 400-10 profile of [APV codec](#apv-codec)
 - Low complexity by optimization for ARM NEON and x86(64bit) SEE/AVX CPU
-- Supports tile-based multi-threading
-- Supports Various metadata including HDR10/10+ and user-defined format
-- Constant QP (CQP), average bitrate (ABR), and constant rate factor (CRF) are supported
+- Tile-based multi-threading
+- Various metadata including HDR10/10+ and user-defined format
+- Constant QP (CQP) and average bitrate (ABR) are supported
+- [APV Family](/readme/apv_family.md) for standard configurations of the APV codec
 
 
 ## APV codec
@@ -23,12 +24,12 @@ The APV codec standard has the following features:
 
 - Perceptually lossless video quality, which is close to raw video quality
 - Low complexity and high throughput intra frame only coding without pixel domain prediction
-- Support for high bit-rate range up to a few Gbps for 2K, 4K and 8K resolution content, enabled by a lightweight entropy coding scheme
+- High bit-rate range up to a few Gbps for 2K, 4K and 8K resolution content, enabled by a lightweight entropy coding scheme
 - Frame tiling for immersive content and for enabling parallel encoding and decoding
-- Support for various chroma sampling formats from 4:2:2 to 4:4:4, and bit-depths from 10 to 16
-- Support for multiple decoding and re-encoding without severe visual quality degradation
-- Support multi-view video and auxiliary video like depth, alpha, and preview
-- Support various metadata including HDR10/10+ and user-defined format
+- Various chroma sampling formats from 4:2:2 to 4:4:4, and bit-depths from 10 to 16
+- Multiple decoding and re-encoding without severe visual quality degradation
+- Multi-view video and auxiliary video like depth, alpha, and preview
+- Various metadata including HDR10/10+ and user-defined format
 
 ### Related specification
 - APV Codec (bitstream): [https://datatracker.ietf.org/doc/draft-lim-apv/](https://datatracker.ietf.org/doc/draft-lim-apv/)
@@ -127,6 +128,9 @@ Project and library share a common version number.
 See [LICENSE](LICENSE) file for details.
 
 ## Graphic logo
+### logo
+![OAPV](/readme/img/oapv_logo_bar_64.png) ![OAPV](/readme/img/oapv_logo_bar_128.png) ![OAPV](/readme/img/oapv_logo_bar_256.png)
+
 ### logo for light mode
 ![OAPV](/readme/img/oapv_logo_black_bar_64.png) ![OAPV](/readme/img/oapv_logo_black_bar_128.png) ![OAPV](/readme/img/oapv_logo_black_bar_256.png)
 
