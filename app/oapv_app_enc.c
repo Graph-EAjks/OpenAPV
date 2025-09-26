@@ -235,7 +235,7 @@ static const args_opt_t enc_args_opts[] = {
         "      - 15: bt2020-12\n"
         "      - 16: smpte2084\n"
         "      - 17: smpte428\n"
-        "      - 18: arib-std-b67\n"
+        "      - 18: hybrid log-gamma (HLG), arib-std-b67\n"
         "      Note: This value should be set along with all other color aspects.\n"
         "            i.e. 'color-primaries', 'color-transfer', 'color-matrix', \n"
         "            and 'color-range' should all be set."
