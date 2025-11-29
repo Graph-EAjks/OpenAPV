@@ -33,45 +33,17 @@
 #include "oapv_app_util.h"
 #include "oapv_app_args.h"
 #include "oapv_app_y4m.h"
-#include "oapv_port.h"
-
 
 #define MAX_BS_BUF   (128 * 1024 * 1024)
 #define MAX_NUM_FRMS (1)           // supports only 1-frame in an access unit
 #define FRM_IDX      (0)           // supports only 1-frame in an access unit
 #define MAX_NUM_CC   (OAPV_MAX_CC) // Max number of color componets (upto 4:4:4:4)
 
-#define MAX_METADATA_PAYLOADS (8)
-
 typedef enum _STATES {
     STATE_ENCODING,
     STATE_SKIPPING,
     STATE_STOP
 } STATES;
-
-/* Mastering display colour volume metadata*/
-typedef struct md_mdcv md_mdcv_t;
-struct md_mdcv {
-    u16 primary_chromaticity_x[3];  /* u(16) */
-    u16 primary_chromaticity_y[3];  /* u(16) */
-    u16 white_point_chromaticity_x; /* u(16) */
-    u16 white_point_chromaticity_y; /* u(16) */
-    u32 max_mastering_luminance;    /* u(32) */
-    u32 min_mastering_luminance;    /* u(32) */
-};
-
-/* Content light level information*/
-typedef struct md_cll md_cll_t;
-struct md_cll {
-    u16 max_cll;  /* u(16) */
-    u16 max_fall; /* u(16) */
-};
-
-typedef struct metadata metadata_t;
-struct metadata {
-    uint32_t num_plds;
-    oapvm_payload_t payloads[MAX_METADATA_PAYLOADS]; 
-};
 
 // clang-format off
 
@@ -361,7 +333,7 @@ typedef struct args_var {
 
     char           master_display[512];
     char           max_cll[64];
-    
+
     oapve_param_t *param;
 } args_var_t;
 
@@ -797,14 +769,10 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
     return 0;
 }
 
-static int parse_master_display(const char* data_string, md_mdcv_t *mdcv) {
-    if (data_string == NULL || mdcv == NULL) {
-        fprintf(stderr, "Error: Input pointer is NULL.\n");
-        return -1;
-    }
-
+static int parse_master_display(const char* data_string, oapvm_payload_mdcv_t *mdcv)
+{
     int assigned_fields = sscanf(data_string,
-        "G(%hu,%hu)B(%hu,%hu)R(%hu,%hu)WP(%hu,%hu)L(%u,%u)",
+        "G(%u,%u)B(%u,%u)R(%u,%u)WP(%u,%u)L(%lu,%lu)",
         &mdcv->primary_chromaticity_x[2], &mdcv->primary_chromaticity_y[2], // G
         &mdcv->primary_chromaticity_x[1], &mdcv->primary_chromaticity_y[1], // B
         &mdcv->primary_chromaticity_x[0], &mdcv->primary_chromaticity_y[0], // R
@@ -815,129 +783,82 @@ static int parse_master_display(const char* data_string, md_mdcv_t *mdcv) {
     // Check if sscanf successfully assigned all expected fields (10 numerical values).
     const int expected_fields = 10;
     if (assigned_fields != expected_fields) {
-        fprintf(stderr, "Parsing error: Expected %d fields, found %d.\n", expected_fields, assigned_fields);
-        return OAPV_ERR_INVALID_ARGUMENT;
+        logerr("Parsing error: master diplay color volume information");
+        return -1;
     }
-
     return 0; // Success
 }
 
-static int parse_max_cll(const char* data_string, md_cll_t *cll) {
-    if (data_string == NULL || cll == NULL) {
-        fprintf(stderr, "Error: Input pointer is NULL.\n");
-        return -1;
-    }
-
+static int parse_max_cll(const char* data_string, oapvm_payload_cll_t *cll)
+{
     int assigned_fields = sscanf(data_string,
-        "%hu,%hu",
+        "%u,%u",
         &cll->max_cll, &cll->max_fall
     );
 
     // Check if sscanf successfully assigned all expected fields (10 numerical values).
     const int expected_fields = 2;
     if (assigned_fields != expected_fields) {
-        fprintf(stderr, "Parsing error: Expected %d fields, found %d.\n", expected_fields, assigned_fields);
-        return OAPV_ERR_INVALID_ARGUMENT;
+        logerr("ERR: parsing error: content light level information");
+        return -1;
     }
-
     return 0; // Success
 }
 
-static void serialize_metadata_mdcv(const md_mdcv_t* mdcv, uint8_t* buffer) {
-    int i;
-    uint8_t* current_ptr = buffer;
-    uint16_t beu16_val;
-    uint32_t beu32_val;
-
-    for (i = 0; i < 3; i++) {
-        beu16_val = ne2be16(mdcv->primary_chromaticity_x[i]);
-        memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-        current_ptr += sizeof(uint16_t);
-
-        beu16_val = ne2be16(mdcv->primary_chromaticity_y[i]);
-        memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-        current_ptr += sizeof(uint16_t);
-    }
-
-    beu16_val = ne2be16(mdcv->white_point_chromaticity_x);
-    memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-    current_ptr += sizeof(uint16_t);
-
-    beu16_val = ne2be16(mdcv->white_point_chromaticity_y);
-    memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-    current_ptr += sizeof(uint16_t);
-
-    beu32_val = ne2be32(mdcv->max_mastering_luminance);
-    memcpy(current_ptr, &beu32_val, sizeof(uint32_t));
-    current_ptr += sizeof(uint32_t);
-
-    beu32_val = ne2be32(mdcv->min_mastering_luminance);
-    memcpy(current_ptr, &beu32_val, sizeof(uint32_t));
-    current_ptr += sizeof(uint32_t);
-}
-
-static void serialize_metadata_cll(const md_cll_t* cll, uint8_t* buffer) {
-    uint8_t* current_ptr = buffer;
-    uint16_t beu16_val;
-
-    beu16_val = ne2be16(cll->max_cll);
-    memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-    current_ptr += sizeof(uint16_t);
-
-    beu16_val = ne2be16(cll->max_fall);
-    memcpy(current_ptr, &beu16_val, sizeof(uint16_t));
-    current_ptr += sizeof(uint16_t);
-}
-
-static int update_metadata(args_var_t *vars, metadata_t *metadata)
+static int ready_for_metadata(args_var_t *vars, oapvm_t mid)
 {
-    if (vars == NULL || metadata == NULL) {
-        fprintf(stderr, "Error: Input pointer is NULL.\n");
-        return -1;
+    int ret, size;
+    oapvm_payload_mdcv_t mdcv;
+    oapvm_payload_cll_t cll;
+    int is_mdcv, is_cll;
+    unsigned char payload[64];
+
+    is_mdcv = (strlen(vars->master_display) > 0)? 1: 0;
+    is_cll = (strlen(vars->max_cll) > 0)? 1: 0;
+
+    if(!is_mdcv && !is_cll) {
+        // no need to ready metadata handler
+        return 0;
     }
 
-    if(strlen(vars->master_display) > 0) {
-        md_mdcv_t mdcv;
-        size_t mdcv_buffer_size = 6*sizeof(uint16_t) + 2*sizeof(uint16_t) + 2*sizeof(uint32_t);
-        uint8_t* mdcv_buffer = (uint8_t*)malloc(mdcv_buffer_size);
-
+    if(is_mdcv) {
         if(parse_master_display(vars->master_display, &mdcv)) {
-            fprintf(stderr, "input value (%s) of %s is invalid\n", vars->master_display, "master-display");
-            return -1;
+            logerr("ERR: cannot parse master display information");
+            ret = -1;
+            goto ERR;
         }
-
-        serialize_metadata_mdcv(&mdcv, mdcv_buffer);
-
-        metadata->payloads[metadata->num_plds].group_id = 1;
-        metadata->payloads[metadata->num_plds].type = OAPV_METADATA_MDCV;
-        metadata->payloads[metadata->num_plds].size = mdcv_buffer_size;
-        metadata->payloads[metadata->num_plds].data = mdcv_buffer;
-
-        metadata->num_plds++;
+        if(OAPV_FAILED(oapvm_write_mdcv(&mdcv, payload, &size))) {
+            logerr("ERR: cannot get master display information bitstream");
+            ret = -1;
+            goto ERR;
+        }
+        if(OAPV_FAILED(oapvm_set(mid, 1, OAPV_METADATA_MDCV, payload, size))) {
+            logerr("ERR: cannot set master display information to handler");
+            ret = -1;
+            goto ERR;
+        }
     }
 
-    if(strlen(vars->max_cll) > 0) {
-
-        md_cll_t cll;
-        size_t cll_buffer_size = 2*sizeof(uint16_t);
-        uint8_t* cll_buffer = malloc(cll_buffer_size);
-
+    if(is_cll) {
         if(parse_max_cll(vars->max_cll, &cll)) {
-            fprintf(stderr, "input value (%s) of %s is invalid\n", vars->max_cll, "max-cli");
-            return -1;
+            logerr("ERR: cannot parse contents light level information");
+            ret = -1;
+            goto ERR;
         }
-
-        serialize_metadata_cll(&cll, cll_buffer);
-
-        metadata->payloads[metadata->num_plds].group_id = 1;
-        metadata->payloads[metadata->num_plds].type = OAPV_METADATA_CLL;
-        metadata->payloads[metadata->num_plds].size = cll_buffer_size;
-        metadata->payloads[metadata->num_plds].data = cll_buffer;
-
-        metadata->num_plds++;
+        if(OAPV_FAILED(oapvm_write_cll(&cll, payload, &size))) {
+            logerr("ERR: cannot get contents light level information bitstream");
+            ret = -1;
+            goto ERR;
+        }
+        if(OAPV_FAILED(oapvm_set(mid, 1, OAPV_METADATA_CLL, payload, size))) {
+            logerr("ERR: cannot set contents light level information to handler");
+            ret = -1;
+            goto ERR;
+        }
     }
 
-    return 0;
+ERR:
+    return ret;
 }
 
 int main(int argc, const char **argv)
@@ -972,8 +893,6 @@ int main(int argc, const char **argv)
     int            cfmt;                      // color format
     const int      num_frames = MAX_NUM_FRMS; // number of frames in an access unit
 
-    metadata_t     metadata = {0};
-    
     // print logo
     logv2("  ____                ___   ___ _   __\n");
     logv2(" / __ \\___  ___ ___  / _ | / _ \\ | / / Encoder (v%s)\n", oapv_version(NULL));
@@ -1141,6 +1060,7 @@ int main(int argc, const char **argv)
     id = oapve_create(&cdesc, &ret);
     if(id == NULL) {
         logerr("ERR: cannot create OAPV encoder\n");
+        ret = -1;
         goto ERR;
     }
 
@@ -1148,15 +1068,6 @@ int main(int argc, const char **argv)
     mid = oapvm_create(&ret);
     if(mid == NULL || OAPV_FAILED(ret)) {
         logerr("ERR: cannot create OAPV metadata handler\n");
-        ret = -1;
-        goto ERR;
-    }
-
-    update_metadata(args_var, &metadata);
-    
-    ret = oapvm_set_all(mid, metadata.payloads, metadata.num_plds);
-    if(OAPV_FAILED(ret)) {
-        logerr("ERR: cannot set metadata\n");
         ret = -1;
         goto ERR;
     }
@@ -1230,6 +1141,13 @@ int main(int argc, const char **argv)
             rfrms.num_frms++;
         }
         ifrms.num_frms++;
+    }
+
+    /* ready metadata if needs */
+    if(ready_for_metadata(args_var, mid)) {
+        logerr("ERR: failed to ready metadata handler");
+        ret = -1;
+        goto ERR;
     }
 
     /* encode pictures *******************************************************/
@@ -1420,11 +1338,6 @@ ERR:
         args->release(args);
     if(args_var)
         free(args_var);
-
-    for(int i=0; i<metadata.num_plds; i++) {
-        free(metadata.payloads[i].data);
-        metadata.payloads[i].data = NULL;
-    }
 
     return ret;
 }
