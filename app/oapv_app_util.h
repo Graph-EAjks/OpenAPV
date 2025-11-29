@@ -44,7 +44,6 @@
 #include <math.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <stdint.h>
 #if LINUX
 #include <signal.h>
 #include <unistd.h>
@@ -181,71 +180,6 @@ static void log_line(char *pre)
     }
 
 static int op_verbose = VERBOSE_SIMPLE;
-
-/* Endiannes */
-#define BSWAP16(x) (((x) << 8 & 0xff00)  | ((x) >> 8 & 0x00ff))
-#define BSWAP32(x) (BSWAP16(x) << 16 | BSWAP16((x) >> 16))
-#define BSWAP64(x) (BSWAP32(x) << 32 | BSWAP32((x) >> 32))
-
-#ifndef bswap16
-static inline uint16_t bswap16(uint16_t x)
-{
-    x= (x>>8) | (x<<8);
-    return x;
-}
-#endif
-
-#ifndef bswap32
-static inline uint32_t bswap32(uint32_t x)
-{
-    return BSWAP32(x);
-}
-#endif
-
-#ifndef bswap64
-static inline uint64_t bswap64(uint64_t x)
-{
-    return (uint64_t)bswap32(x) << 32 | bswap32(x >> 32);
-}
-#endif
-
-// be2ne - big-endian to native-endian
-// le2ne - little-endian to native-endian
-// ne2be - native-endian to big-endian
-// ne2le - native-endian to little-endian
-
-#if HAVE_BIGENDIAN
-#define be2ne16(x) (x)
-#define be2ne32(x) (x)
-#define be2ne64(x) (x)
-#define le2ne16(x) bswap16(x)
-#define le2ne32(x) bswap32(x)
-#define le2ne64(x) bswap64(x)
-
-#define ne2be16(x) (x)
-#define ne2be32(x) (x)
-#define ne2be64(x) (x)
-#define ne2le16(x) bswap16(x)
-#define ne2le32(x) bswap32(x)
-#define ne2le64(x) bswap64(x)
-
-#else
-
-#define be2ne16(x) bswap16(x)
-#define be2ne32(x) bswap32(x)
-#define be2ne64(x) bswap64(x)
-#define le2ne16(x) (x)
-#define le2ne32(x) (x)
-#define le2ne64(x) (x)
-
-#define ne2be16(x) bswap16(x)
-#define ne2be32(x) bswap32(x)
-#define ne2be64(x) bswap64(x)
-#define ne2le16(x) (x)
-#define ne2le32(x) (x)
-#define ne2le64(x) (x)
-
-#endif
 
 /* Clocks */
 #if defined(_WIN64) || defined(_WIN32)

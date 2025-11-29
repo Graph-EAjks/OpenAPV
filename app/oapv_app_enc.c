@@ -407,7 +407,6 @@ static args_var_t *args_init_vars(args_parser_t *args, oapve_param_t *param)
     args_set_variable_by_key_long(opts, "master-display", vars->master_display);
     args_set_variable_by_key_long(opts, "max-cll", vars->max_cll);
 
-
     return vars;
 }
 
@@ -765,7 +764,6 @@ static int update_param(args_var_t *vars, oapve_param_t *param)
 
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-w", vars->tile_w);
     UPDATE_A_PARAM_W_KEY_VAL(param, "tile-h", vars->tile_h);
-
     return 0;
 }
 
@@ -796,7 +794,7 @@ static int parse_max_cll(const char* data_string, oapvm_payload_cll_t *cll)
         &cll->max_cll, &cll->max_fall
     );
 
-    // Check if sscanf successfully assigned all expected fields (10 numerical values).
+    // Check if sscanf successfully assigned all expected fields (2 numerical values).
     const int expected_fields = 2;
     if (assigned_fields != expected_fields) {
         logerr("ERR: parsing error: content light level information");
@@ -805,7 +803,7 @@ static int parse_max_cll(const char* data_string, oapvm_payload_cll_t *cll)
     return 0; // Success
 }
 
-static int ready_for_metadata(args_var_t *vars, oapvm_t mid)
+static int update_metadata(args_var_t *vars, oapvm_t mid)
 {
     int ret, size;
     oapvm_payload_mdcv_t mdcv;
@@ -817,7 +815,7 @@ static int ready_for_metadata(args_var_t *vars, oapvm_t mid)
     is_cll = (strlen(vars->max_cll) > 0)? 1: 0;
 
     if(!is_mdcv && !is_cll) {
-        // no need to ready metadata handler
+        // no need to add metadata payload
         return 0;
     }
 
@@ -1144,8 +1142,8 @@ int main(int argc, const char **argv)
     }
 
     /* ready metadata if needs */
-    if(ready_for_metadata(args_var, mid)) {
-        logerr("ERR: failed to ready metadata handler");
+    if(update_metadata(args_var, mid)) {
+        logerr("ERR: failed to update metadata");
         ret = -1;
         goto ERR;
     }
