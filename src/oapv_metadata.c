@@ -214,6 +214,8 @@ int oapvm_write_mdcv(oapvm_payload_mdcv_t *mdcv, void *data, int *size)
     oapv_bsw_write(&bs, tu32, 32);
 
     oapv_bsw_deinit(&bs);
+
+    *size = 24; // MDCV payload has 24 bytes
     return OAPV_OK;
 }
 
@@ -253,6 +255,8 @@ int oapvm_write_cll(oapvm_payload_cll_t *cll, void *data, int *size)
     oapv_bsw_write(&bs, t, 16);
 
     oapv_bsw_deinit(&bs);
+
+    *size = 4; // CLL payload has 4 bytes
     return OAPV_OK;
 }
 
