@@ -43,6 +43,8 @@ static int bsw_flush(oapv_bs_t *bs, int bytes)
     if(bytes == 0)
         bytes = BSW_GET_SINK_BYTE(bs);
 
+    oapv_assert_rv(bs->cur + bytes <= bs->end, -1);
+
     while(bytes--) {
         *bs->cur++ = (bs->code >> 24) & 0xFF;
         bs->code <<= 8;
@@ -125,8 +127,6 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len) /* len(1 ~ 32) */
         bs->leftbits -= len;
     }
     else {
-        oapv_assert_rv(bs->cur + 4 < bs->end, -1);
-
         bs->leftbits = 0;
         bs->fn_flush(bs, 0);
         bs->code = (leftbits < 32 ? val << leftbits : 0);

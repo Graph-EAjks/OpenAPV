@@ -805,7 +805,7 @@ static int parse_max_cll(const char* data_string, oapvm_payload_cll_t *cll)
 
 static int update_metadata(args_var_t *vars, oapvm_t mid)
 {
-    int ret, size;
+    int ret = 0, size;
     oapvm_payload_mdcv_t mdcv;
     oapvm_payload_cll_t cll;
     int is_mdcv, is_cll;
