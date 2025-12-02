@@ -675,19 +675,19 @@ OAPV_EXPORT void oapvm_rem_all(oapvm_t mid);
 /* Mastering display colour volume metadata payload */
 typedef struct oapvm_payload_mdcv oapvm_payload_mdcv_t;
 struct oapvm_payload_mdcv {
-    int           primary_chromaticity_x[3];  /* range: 0 ~ (2^16 - 1) */
-    int           primary_chromaticity_y[3];  /* range: 0 ~ (2^16 - 1) */
-    int           white_point_chromaticity_x; /* range: 0 ~ (2^16 - 1) */
-    int           white_point_chromaticity_y; /* range: 0 ~ (2^16 - 1) */
-    unsigned long max_mastering_luminance;    /* range: 0 ~ (2^32 - 1) */
-    unsigned long min_mastering_luminance;    /* range: 0 ~ (2^32 - 1) */
+    int           primary_chromaticity_x[3];  /* range: 0 ~ 0xFFFF */
+    int           primary_chromaticity_y[3];  /* range: 0 ~ 0xFFFF */
+    int           white_point_chromaticity_x; /* range: 0 ~ 0xFFFF */
+    int           white_point_chromaticity_y; /* range: 0 ~ 0xFFFF */
+    unsigned long max_mastering_luminance;    /* range: 0 ~ 0xFFFFFFFF */
+    unsigned long min_mastering_luminance;    /* range: 0 ~ 0xFFFFFFFF */
 };
 
 /* Content light level information metadata payload */
 typedef struct oapvm_payload_cll oapvm_payload_cll_t;
 struct oapvm_payload_cll {
-    int max_cll;  /* range: 0 ~ (2^16 - 1) */
-    int max_fall; /* range: 0 ~ (2^16 - 1) */
+    int max_cll;  /* range: 0 ~ 0xFFFF */
+    int max_fall; /* range: 0 ~ 0xFFFF */
 };
 
 /* write to metadata_mdcv() payload syntax

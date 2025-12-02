@@ -189,27 +189,27 @@ int oapvm_write_mdcv(oapvm_payload_mdcv_t *mdcv, void *data, int *size)
 
     for(i = 0; i < 3; i++) {
         t = mdcv->primary_chromaticity_x[i];
-        oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+        oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
         oapv_bsw_write(&bs, t, 16);
     }
     for(i = 0; i < 3; i++) {
         t = mdcv->primary_chromaticity_y[i];
-        oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+        oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
         oapv_bsw_write(&bs, t, 16);
     }
     t = mdcv->white_point_chromaticity_x;
-    oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
     oapv_bsw_write(&bs, t, 16);
 
     t = mdcv->white_point_chromaticity_y;
-    oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
     oapv_bsw_write(&bs, t, 16);
 
-    oapv_assert_rv(mdcv->max_mastering_luminance < (2^32), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(mdcv->max_mastering_luminance <= 0xFFFFFFFF, OAPV_ERR_INVALID_ARGUMENT);
     tu32 = mdcv->max_mastering_luminance;
     oapv_bsw_write(&bs, tu32, 32);
 
-    oapv_assert_rv(mdcv->min_mastering_luminance < (2^32), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(mdcv->min_mastering_luminance <= 0xFFFFFFFF, OAPV_ERR_INVALID_ARGUMENT);
     tu32 = mdcv->min_mastering_luminance;
     oapv_bsw_write(&bs, tu32, 32);
 
@@ -247,11 +247,11 @@ int oapvm_write_cll(oapvm_payload_cll_t *cll, void *data, int *size)
     oapv_bsw_init(&bs, data, 4, NULL); // CLL payload has 4 bytes
 
     t = cll->max_cll;
-    oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
     oapv_bsw_write(&bs, t, 16);
 
     t = cll->max_fall;
-    oapv_assert_rv(t >=0 && t < (2^16), OAPV_ERR_INVALID_ARGUMENT);
+    oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
     oapv_bsw_write(&bs, t, 16);
 
     oapv_bsw_deinit(&bs);
