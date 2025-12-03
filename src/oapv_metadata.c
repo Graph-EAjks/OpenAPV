@@ -191,8 +191,7 @@ int oapvm_write_mdcv(oapvm_payload_mdcv_t *mdcv, void *data, int *size)
         t = mdcv->primary_chromaticity_x[i];
         oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
         oapv_bsw_write(&bs, t, 16);
-    }
-    for(i = 0; i < 3; i++) {
+
         t = mdcv->primary_chromaticity_y[i];
         oapv_assert_rv(t >=0 && t <= 0xFFFF, OAPV_ERR_INVALID_ARGUMENT);
         oapv_bsw_write(&bs, t, 16);

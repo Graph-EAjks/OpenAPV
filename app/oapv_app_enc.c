@@ -771,8 +771,8 @@ static int parse_master_display(const char* data_string, oapvm_payload_mdcv_t *m
 {
     int assigned_fields = sscanf(data_string,
         "G(%u,%u)B(%u,%u)R(%u,%u)WP(%u,%u)L(%lu,%lu)",
-        &mdcv->primary_chromaticity_x[2], &mdcv->primary_chromaticity_y[2], // G
-        &mdcv->primary_chromaticity_x[1], &mdcv->primary_chromaticity_y[1], // B
+        &mdcv->primary_chromaticity_x[1], &mdcv->primary_chromaticity_y[1], // G
+        &mdcv->primary_chromaticity_x[2], &mdcv->primary_chromaticity_y[2], // B
         &mdcv->primary_chromaticity_x[0], &mdcv->primary_chromaticity_y[0], // R
         &mdcv->white_point_chromaticity_x, &mdcv->white_point_chromaticity_y, // White Point
         &mdcv->max_mastering_luminance, &mdcv->min_mastering_luminance       // Luminance
