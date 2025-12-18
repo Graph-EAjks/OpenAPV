@@ -26,25 +26,25 @@ string(REGEX MATCH "(#define)([ ]+)(OAPV_VER_PATCH)([ ]+)(\\()([ ]*)([0-9]+)([ ]
 if(APISET_MATCH)
   string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_APISET)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_APISET ${APISET_MATCH})
 else()
-  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_APISET (number).")
+  message(WARNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_APISET (number).")
 endif()
 
 if(MAJOR_MATCH)
   string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_MAJOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_MAJOR ${MAJOR_MATCH})
 else()
-  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MAJOR (number).")
+  message(WARNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MAJOR (number).")
 endif()
 
 if(MINOR_MATCH)
     string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_MINOR)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_MINOR ${MINOR_MATCH})
 else()
-  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MINOR (number).")
+  message(WARNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_MINOR (number).")
 endif()
 
 if(PATCH_MATCH)
     string(REGEX REPLACE "(#define)([ ]+)(OAPV_VER_PATCH)([ ]+)(\\()([ ]*)([0-9]+)([ ]*)(\\))" "\\7" VERSION_PATCH ${PATCH_MATCH})
 else()
-  message(WARRNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_PATCH (number).")
+  message(WARNING "In the file oapv.h, no matching string was found for the regular expression (regex) used to match the pattern containing #define OAPV_VER_PATCH (number).")
 endif()
 
 message(DEBUG "OAPV_VER_APISET: ${VERSION_APISET}")
@@ -102,41 +102,76 @@ endif()
 # Compilation flags
 ########################################
 
-# Set compiler flags and options.
+# Set compiler flags and options using modern CMake practices
 if(MSVC)
   message("Not supported yet!")
 elseif(UNIX OR MINGW)
-    if(ENABLE_COVERAGE)
+    if(ENABLE_COVERAGE AND NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Debug")
     endif()
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release")
     endif()
-    message("CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+    message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 
-    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-        set(OPT_LV "O0")
-        set(OPT_DBG "-g")
-    else()
-        set(OPT_LV "O3")
-        set(OPT_DBG "-DNDEBUG") # disable assert
+    # Define common compiler flags using generator expressions
+    set(OAPV_COMMON_COMPILE_FLAGS
+        $<$<CONFIG:Debug>:-g>
+        $<$<CONFIG:Release>:-O3 -DNDEBUG>
+        $<$<CONFIG:RelWithDebInfo>:-O2 -g -DNDEBUG>
+        $<$<CONFIG:MinSizeRel>:-Os -DNDEBUG>
+        -fomit-frame-pointer
+        -pthread
+        -std=c99
+        -Wall
+        -Wno-unused-function
+        -Wno-pointer-sign
+        -Wno-pointer-to-int-cast
+    )
+
+    # Add coverage flags if enabled
+    if(ENABLE_COVERAGE)
+        list(APPEND OAPV_COMMON_COMPILE_FLAGS --coverage)
+        set(OAPV_COMMON_LINK_FLAGS --coverage)
     endif()
 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OPT_DBG} -${OPT_LV} -fomit-frame-pointer -pthread -std=c99")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-unused-function -Wno-pointer-sign -Wno-pointer-to-int-cast")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lm")
+    # Set CMAKE_C_STANDARD_REQUIRED to enforce C99
+    set(CMAKE_C_STANDARD_REQUIRED ON)
+    set(CMAKE_C_EXTENSIONS OFF)
 
+    # Apply flags to CMAKE_C_FLAGS for global compatibility
+    # Note: Generator expressions don't work with CMAKE_C_FLAGS directly, 
+    # so we'll use target_compile_options for individual targets
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fomit-frame-pointer -pthread -std=c99 -Wall -Wno-unused-function -Wno-pointer-sign -Wno-pointer-to-int-cast")
+    
+    # Set build-type specific flags
+    if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
+    elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -DNDEBUG")
+    elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g -DNDEBUG")
+    elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -DNDEBUG")
+    endif()
+    
+    # Add coverage flags if enabled
     if(ENABLE_COVERAGE)
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
-      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+    endif()
+
+    # Set linker flags
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lm")
+    if(ENABLE_COVERAGE)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OAPV_COMMON_LINK_FLAGS}")
     endif()
 else()
     message("Unknown compiler")
 endif()
 
 # Command to output information to the console
-message ("c Flags: " ${CMAKE_C_FLAGS})
-message ("linker Flags: " ${CMAKE_EXE_LINKER_FLAGS})
+message(STATUS "C Flags: ${CMAKE_C_FLAGS}")
+message(STATUS "Linker Flags: ${CMAKE_EXE_LINKER_FLAGS}")
 
 ########################################
 # Configuration
