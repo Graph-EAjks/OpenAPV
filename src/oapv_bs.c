@@ -36,7 +36,7 @@
 #if ENABLE_ENCODER
 ///////////////////////////////////////////////////////////////////////////////
 /* number of bytes to be sunk */
-#define BSW_GET_SINK_BYTE(bs) ((32 - (bs)->leftbits + 7) >> 3)
+#define BSW_GET_SINK_BYTE(bs) ((64 - (bs)->leftbits + 7) >> 3)
 
 static int bsw_flush(oapv_bs_t *bs, int bytes)
 {
@@ -46,11 +46,11 @@ static int bsw_flush(oapv_bs_t *bs, int bytes)
     oapv_assert_rv(bs->cur + bytes <= bs->end, -1);
 
     while(bytes--) {
-        *bs->cur++ = (bs->code >> 24) & 0xFF;
+        *bs->cur++ = (bs->code >> 56) & 0xFF;
         bs->code <<= 8;
     }
 
-    bs->leftbits = 32;
+    bs->leftbits = 64;
 
     return 0;
 }
@@ -62,7 +62,7 @@ void oapv_bsw_init(oapv_bs_t *bs, u8 *buf, int size, oapv_bs_fn_flush_t fn_flush
     bs->cur = buf;
     bs->end = buf + size;
     bs->code = 0;
-    bs->leftbits = 32;
+    bs->leftbits = 64;
     bs->fn_flush = (fn_flush == NULL ? bsw_flush : fn_flush);
 }
 
@@ -76,7 +76,7 @@ void *oapv_bsw_sink(oapv_bs_t *bs)
     oapv_assert_rv(bs->cur + BSW_GET_SINK_BYTE(bs) < bs->end, NULL);
     bs->fn_flush(bs, 0);
     bs->code = 0;
-    bs->leftbits = 32;
+    bs->leftbits = 64;
     return (void *)bs->cur;
 }
 
@@ -107,21 +107,21 @@ int oapv_bsw_write1(oapv_bs_t *bs, int val)
         bs->fn_flush(bs, 0);
 
         bs->code = 0;
-        bs->leftbits = 32;
+        bs->leftbits = 64;
     }
 
     return 0;
 }
 
-int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len) /* len(1 ~ 32) */
+int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
 {
     int leftbits;
 
     oapv_assert(bs);
 
     leftbits = bs->leftbits;
-    val <<= (32 - len);
-    bs->code |= (val >> (32 - leftbits));
+    val <<= (64 - len);
+    bs->code |= (val >> (64 - leftbits));
 
     if(len < leftbits) {
         bs->leftbits -= len;
@@ -129,8 +129,8 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len) /* len(1 ~ 32) */
     else {
         bs->leftbits = 0;
         bs->fn_flush(bs, 0);
-        bs->code = (leftbits < 32 ? val << leftbits : 0);
-        bs->leftbits = 32 - (len - leftbits);
+        bs->code = (leftbits < 64 ? val << leftbits : 0);
+        bs->leftbits = 64 - (len - leftbits);
     }
 
     return 0;
@@ -156,7 +156,7 @@ static void inline bsr_skip_code(oapv_bs_t *bs, int size)
 {
     oapv_assert(size <= 32);
     oapv_assert(bs->leftbits >= size);
-    if(size == 32) {
+    if(size == 64) {
         bs->code = 0;
         bs->leftbits = 0;
     }
@@ -168,7 +168,7 @@ static void inline bsr_skip_code(oapv_bs_t *bs, int size)
 
 static int bsr_flush(oapv_bs_t *bs, int byte)
 {
-    int shift = 24, remained;
+    int shift = 56, remained;
     u32 code = 0;
 
     oapv_assert(byte);
@@ -210,11 +210,11 @@ int oapv_bsr_clz_in_code(u32 code)
     int clz, bits4, shift;
 
     if(code == 0)
-        return 32; /* to protect infinite loop */
+        return 64; /* to protect infinite loop */
 
     bits4 = 0;
     clz = 0;
-    shift = 28;
+    shift = 56;
 
     while(bits4 == 0 && shift >= 0) {
         bits4 = (code >> shift) & 0xf;
@@ -229,7 +229,7 @@ int oapv_bsr_clz(oapv_bs_t *bs)
     int clz;
     u32 code;
 
-    code = oapv_bsr_peek(bs, 32);
+    code = oapv_bsr_peek(bs, 64); /* supports max 64bit codeword */
     oapv_assert(code != 0);
     clz = oapv_bsr_clz_in_code(code);
     return clz;
@@ -256,7 +256,7 @@ void oapv_bsr_skip(oapv_bs_t *bs, int size)
 
     if(bs->leftbits < size) {
         size -= bs->leftbits;
-        if(bs->fn_flush(bs, 4)) {
+        if(bs->fn_flush(bs, 8)) {
             // oapv_trace("already reached the end of bitstream\n");  /* should be updated */
             return;
         }
@@ -270,7 +270,7 @@ u32 oapv_bsr_peek(oapv_bs_t *bs, int size)
     u32 code = 0;
 
     if(bs->leftbits < size) {
-        byte = (32 - bs->leftbits) >> 3;
+        byte = (64 - bs->leftbits) >> 3;
 
         /* We should not check the return value
         because this function could be failed at the EOB. */
@@ -286,9 +286,9 @@ u32 oapv_bsr_peek(oapv_bs_t *bs, int size)
         }
     }
 
-    oapv_assert(bs->leftbits <= 32);
+    oapv_assert(bs->leftbits <= 64);
 
-    code = bs->code >> (32 - size);
+    code = bs->code >> (64 - size);
     size -= bs->leftbits;
 
     if(size > 0) {
@@ -327,14 +327,14 @@ u32 oapv_bsr_read(oapv_bs_t *bs, int size)
     oapv_assert(size > 0);
 
     if(bs->leftbits < size) {
-        code = bs->code >> (32 - size);
+        code = bs->code >> (64 - size);
         size -= bs->leftbits;
-        if(bs->fn_flush(bs, 4)) {
+        if(bs->fn_flush(bs, 8)) {
             oapv_trace("already reached the end of bitstream\n"); /* should be updated */
             return (u32)(-1);
         }
     }
-    code |= bs->code >> (32 - size);
+    code |= bs->code >> (64 - size);
 
     bsr_skip_code(bs, size);
 
@@ -345,12 +345,12 @@ int oapv_bsr_read1(oapv_bs_t *bs)
 {
     int code;
     if(bs->leftbits == 0) {
-        if(bs->fn_flush(bs, 4)) {
+        if(bs->fn_flush(bs, 8)) {
             oapv_trace("already reached the end of bitstream\n"); /* should be updated */
             return -1;
         }
     }
-    code = (int)(bs->code >> 31);
+    code = (int)(bs->code >> 63);
 
     bs->code <<= 1;
     bs->leftbits -= 1;
@@ -361,7 +361,7 @@ int oapv_bsr_read1(oapv_bs_t *bs)
 u32 oapv_bsr_read_direct(void *addr, int len)
 {
     u32 code = 0;
-    int shift = 24;
+    int shift = 56;
     u8 *p = (u8 *)addr;
     int byte = (len + 7) >> 3;
 
@@ -373,7 +373,7 @@ u32 oapv_bsr_read_direct(void *addr, int len)
         byte--;
         p++;
     }
-    code = code >> (32 - len);
+    code = code >> (64 - len);
     return code;
 }
 
