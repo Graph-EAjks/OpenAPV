@@ -54,6 +54,12 @@ struct oapv_bs {
 #if ENABLE_ENCODER
 ///////////////////////////////////////////////////////////////////////////////
 
+/* move current write position to a specific bitstream address */
+#define BSW_MOVE_CUR(bs, addr) \
+    (bs)->cur = addr; \
+    (bs)->code = 0; \
+    (bs)->leftbits = 64;
+
 static inline bool bsw_is_align8(oapv_bs_t *bs)
 {
     return (bool)(!((bs)->leftbits & 0x7));
@@ -94,7 +100,8 @@ should set zero in that case. */
 #endif
 #else
 #define BSR_SKIP_CODE(bs, size) \
-    oapv_assert((bs)->leftbits >= (size) && (size) <= 64); \
+    /* 64bit is missing here to avoid the arithmetic left shift */ \
+    oapv_assert((bs)->leftbits >= (size) && (size) < 64); \
     (bs)->code <<= (size); (bs)->leftbits -= (size);
 #endif
 

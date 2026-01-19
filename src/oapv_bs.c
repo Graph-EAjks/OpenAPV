@@ -112,7 +112,7 @@ int oapv_bsw_write1(oapv_bs_t *bs, int val)
 
     return 0;
 }
-
+#if 0
 int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
 {
     int leftbits;
@@ -120,7 +120,7 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
     oapv_assert(bs);
 
     leftbits = bs->leftbits;
-    val <<= (64 - len);
+    val <<= (32 - len);
     bs->code |= (val >> (64 - leftbits));
 
     if(len < leftbits) {
@@ -135,6 +135,30 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
 
     return 0;
 }
+#else
+int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
+{
+    int leftbits;
+    u64 code_t;
+
+    oapv_assert(bs);
+
+    leftbits = bs->leftbits;
+    code_t = ((u64)val) << (64 - len);
+    bs->code |= (code_t >> (64 - leftbits));
+
+    if(len < leftbits) {
+        bs->leftbits -= len;
+    }
+    else {
+        bs->fn_flush(bs, 8);
+        bs->code = code_t << leftbits;
+        bs->leftbits = 64 - (len - leftbits);
+    }
+
+    return 0;
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // end of encoder code
@@ -169,7 +193,7 @@ static void inline bsr_skip_code(oapv_bs_t *bs, int size)
 static int bsr_flush(oapv_bs_t *bs, int byte)
 {
     int shift = 56, remained;
-    u32 code = 0;
+    u64 code = 0;
 
     oapv_assert(byte);
 
@@ -186,7 +210,7 @@ static int bsr_flush(oapv_bs_t *bs, int byte)
     bs->leftbits = byte << 3;
 
     while(byte) {
-        code |= *(bs->cur++) << shift;
+        code |= (u64)(*(bs->cur++)) << shift;
         byte--;
         shift -= 8;
     }
@@ -334,7 +358,7 @@ u32 oapv_bsr_read(oapv_bs_t *bs, int size)
             return (u32)(-1);
         }
     }
-    code |= bs->code >> (64 - size);
+    code |= (u32)(bs->code >> (64 - size));
 
     bsr_skip_code(bs, size);
 
@@ -361,7 +385,7 @@ int oapv_bsr_read1(oapv_bs_t *bs)
 u32 oapv_bsr_read_direct(void *addr, int len)
 {
     u32 code = 0;
-    int shift = 56;
+    int shift = 24;
     u8 *p = (u8 *)addr;
     int byte = (len + 7) >> 3;
 
@@ -373,8 +397,7 @@ u32 oapv_bsr_read_direct(void *addr, int len)
         byte--;
         p++;
     }
-    code = code >> (64 - len);
-    return code;
+    return (code >> (32 - len));
 }
 
 

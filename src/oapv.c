@@ -813,10 +813,11 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
         oapv_bsw_write1(bs, 0);
     }
 
-    /* de-init BSW */
-    oapv_bsw_deinit(bs);
+    int enc_bytes = (u8*)oapv_bsw_sink(bs) - bs_cur;
+    oapv_assert(enc_bytes > 0);
 
-    return (int)(bs->cur - bs_cur);
+    oapv_bsw_deinit(bs);
+    return enc_bytes;
 }
 
 static int enc_tile(oapve_ctx_t *ctx, oapve_core_t *core, oapve_tile_t *tile)
@@ -906,15 +907,15 @@ static int enc_tile(oapve_ctx_t *ctx, oapve_core_t *core, oapve_tile_t *tile)
         tile->th.tile_data_size[c] = enc_tile_comp(&bs, tile, ctx, core, c, s_org, org, s_rec, rec);
     }
 
-    u32 bs_size = (int)(bs.cur - bs.beg);
-    if(bs_size > tile->bs_buf_max) {
+    u32 remained_bs_size = (int)((u8*)oapv_bsw_sink(&bs) - bs.beg);
+    if(remained_bs_size > tile->bs_buf_max) {
         return OAPV_ERR_OUT_OF_BS_BUF;
     }
-    tile->bs_size = bs_size;
+    tile->bs_size = remained_bs_size;
 
     oapv_bs_t bs_th;
     oapv_bsw_init(&bs_th, tile->bs_buf, tile->bs_size, NULL);
-    tile->tile_size = bs_size - OAPV_TILE_SIZE_LEN;
+    tile->tile_size = remained_bs_size - OAPV_TILE_SIZE_LEN;
 
     DUMP_SAVE(1);
     DUMP_LOAD(0);
@@ -1124,8 +1125,7 @@ static int enc_frame(oapve_ctx_t *ctx, oapv_bs_t *bs)
     oapve_set_frame_header(ctx, &ctx->fh);
     oapve_vlc_frame_header(bs, ctx, &ctx->fh);
 
-    /* de-init BSW */
-    oapv_bsw_deinit(bs);
+    u8 *bs_tile_pos = oapv_bsw_sink(bs);
 
     /* rc init */
     u64 cost_sum = 0;
@@ -1171,16 +1171,16 @@ static int enc_frame(oapve_ctx_t *ctx, oapv_bs_t *bs)
     /****************************************************/
 
     for(int i = 0; i < ctx->num_tiles; i++) {
-        oapv_mcpy(bs->cur, ctx->tile[i].bs_buf, ctx->tile[i].bs_size);
-        bs->cur = bs->cur + ctx->tile[i].bs_size;
+        oapv_mcpy(bs_tile_pos, ctx->tile[i].bs_buf, ctx->tile[i].bs_size);
+        bs_tile_pos = bs_tile_pos + ctx->tile[i].bs_size;
         ctx->fh.tile_size[i] = ctx->tile[i].bs_size - OAPV_TILE_SIZE_LEN;
     }
+    BSW_MOVE_CUR(bs, bs_tile_pos); // move bs to at the end of tiles
 
     /* rewrite frame header */
     if(ctx->fh.tile_size_present_in_fh_flag) {
         oapve_vlc_frame_header(&bs_fh, ctx, &ctx->fh);
-        /* de-init BSW */
-        oapv_bsw_sink(&bs_fh);
+        oapv_bsw_sink(&bs_fh); // make sure write bits to bs buffer
     }
     if(ctx->param->rc_type != 0) {
         oapve_rc_update_after_pic(ctx, cost_sum);
@@ -1293,7 +1293,7 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
     oapv_bs_t    bsw;
     oapve_ctx_t *ctx;
     oapv_frm_t  *frm;
-    oapv_bs_t   *bs, bs_pbu_beg;
+    oapv_bs_t   *bs;
     int          i, ret;
     u8          *bs_pos_pbu_beg, *bs_pos_au_beg;
 
@@ -1320,10 +1320,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
 
         // write headers
         bs_pos_pbu_beg = oapv_bsw_sink(bs);            /* store pbu pos to calculate size */
-        oapv_mcpy(&bs_pbu_beg, bs, sizeof(oapv_bs_t)); /* store pbu pos of ai to re-write */
-
         DUMP_SAVE(0);
-        oapve_vlc_pbu_size(bs, 0);
+        oapv_bsw_write(bs, 0, 32); /* skip pbu_size syntax (later re-write) */
         oapve_vlc_pbu_header(bs, frm->pbu_type, frm->group_id);
         // encode a frame
         ret = enc_frame(ctx, bs);
@@ -1333,7 +1331,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         int pbu_size = ((u8 *)oapv_bsw_sink(bs)) - bs_pos_pbu_beg - 4;
         DUMP_SAVE(1);
         DUMP_LOAD(0);
-        oapve_vlc_pbu_size(&bs_pbu_beg, pbu_size);
+        oapv_bsw_write_direct(bs_pos_pbu_beg, pbu_size, 32);
+        DUMP_HLS(pbu_size, pbu_size);
         DUMP_LOAD(1);
 
         stat->frm_size[i] = pbu_size + 4 /* PUB size length*/;
@@ -1362,10 +1361,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
         for(i = 0; i < num_md; i++) {
             int group_id = md_list->md_arr[i].group_id;
             bs_pos_pbu_beg = oapv_bsw_sink(bs);            /* store pbu pos to calculate size */
-            oapv_mcpy(&bs_pbu_beg, bs, sizeof(oapv_bs_t)); /* store pbu pos of ai to re-write */
             DUMP_SAVE(0);
-
-            oapve_vlc_pbu_size(bs, 0);
+            oapv_bsw_write(bs, 0, 32); /* skip pbu_size syntax (later re-write) */
             oapve_vlc_pbu_header(bs, OAPV_PBU_TYPE_METADATA, group_id);
             oapve_vlc_metadata(&md_list->md_arr[i], bs);
 
@@ -1373,7 +1370,8 @@ int oapve_encode(oapve_t eid, oapv_frms_t *ifrms, oapvm_t mid, oapv_bitb_t *bitb
             int pbu_size = ((u8 *)oapv_bsw_sink(bs)) - bs_pos_pbu_beg - 4;
             DUMP_SAVE(1);
             DUMP_LOAD(0);
-            oapve_vlc_pbu_size(&bs_pbu_beg, pbu_size);
+            oapv_bsw_write_direct(bs_pos_pbu_beg, pbu_size, 32);
+            DUMP_HLS(pbu_size, pbu_size);
             DUMP_LOAD(1);
         }
     }
