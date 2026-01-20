@@ -112,30 +112,7 @@ int oapv_bsw_write1(oapv_bs_t *bs, int val)
 
     return 0;
 }
-#if 0
-int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
-{
-    int leftbits;
 
-    oapv_assert(bs);
-
-    leftbits = bs->leftbits;
-    val <<= (32 - len);
-    bs->code |= (val >> (64 - leftbits));
-
-    if(len < leftbits) {
-        bs->leftbits -= len;
-    }
-    else {
-        bs->leftbits = 0;
-        bs->fn_flush(bs, 0);
-        bs->code = (leftbits < 64 ? val << leftbits : 0);
-        bs->leftbits = 64 - (len - leftbits);
-    }
-
-    return 0;
-}
-#else
 int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
 {
     int leftbits;
@@ -155,10 +132,8 @@ int oapv_bsw_write(oapv_bs_t *bs, u32 val, int len)
         bs->code = code_t << leftbits;
         bs->leftbits = 64 - (len - leftbits);
     }
-
     return 0;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // end of encoder code
