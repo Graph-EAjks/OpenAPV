@@ -1667,8 +1667,8 @@ static int dec_tile(oapvd_core_t *core, oapvd_tile_t *tile)
     oapvd_ctx_t *ctx = core->ctx;
     oapv_bs_t    bs; // bs for 'tile()' syntax
 
-    oapv_bsr_init(&bs, tile->bs_beg + OAPV_TILE_SIZE_LEN, tile->data_size, NULL);
-    ret = oapvd_vlc_tile_header(&bs, ctx, &tile->th);
+    oapv_bsr_init(&bs, tile->bs_beg + OAPV_TILE_SIZE_LEN, tile->tile_size, NULL);
+    ret = oapvd_vlc_tile_header(&bs, ctx->num_comp, &tile->th, tile->tile_size);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
     for(c = 0; c < ctx->num_comp; c++) {
@@ -1752,16 +1752,16 @@ static int dec_thread_tile(void *arg)
         }
         /* read tile size */
         oapv_bsr_init(&bs, tile[tile_idx].bs_beg, OAPV_TILE_SIZE_LEN, NULL);
-        ret = oapvd_vlc_tile_size(&bs, &tile[tile_idx].data_size);
+        ret = oapvd_vlc_tile_size(&bs, &tile[tile_idx].tile_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
-        oapv_assert_g(tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + (tile[tile_idx].data_size - 1) <= ctx->bs.end, ERR);
+        oapv_assert_g(tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + (tile[tile_idx].tile_size - 1) <= ctx->bs.end, ERR);
 
         oapv_tpool_enter_cs(ctx->sync_obj);
         if(tile_idx + 1 < ctx->num_tiles) {
-            tile[tile_idx + 1].bs_beg = tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + tile[tile_idx].data_size;
+            tile[tile_idx + 1].bs_beg = tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + tile[tile_idx].tile_size;
         }
         else {
-            ctx->tile_end = tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + tile[tile_idx].data_size;
+            ctx->tile_end = tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + tile[tile_idx].tile_size;
         }
         oapv_tpool_leave_cs(ctx->sync_obj);
 
