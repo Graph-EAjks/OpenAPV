@@ -1754,7 +1754,9 @@ static int dec_thread_tile(void *arg)
         oapv_bsr_init(&bs, tile[tile_idx].bs_beg, OAPV_TILE_SIZE_LEN, NULL);
         ret = oapvd_vlc_tile_size(&bs, &tile[tile_idx].tile_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
-        oapv_assert_g(tile[tile_idx].bs_beg + OAPV_TILE_SIZE_LEN + (tile[tile_idx].tile_size - 1) <= ctx->bs.end, ERR);
+
+        /* check the tile data size */
+        oapv_assert_g((OAPV_TILE_SIZE_LEN + tile[tile_idx].tile_size) <= (ctx->bs.end - tile[tile_idx].bs_beg + 1), ERR);
 
         oapv_tpool_enter_cs(ctx->sync_obj);
         if(tile_idx + 1 < ctx->num_tiles) {
