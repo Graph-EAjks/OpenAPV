@@ -797,7 +797,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
                     ctx->fn_enc_blk(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);
                     oapve_vlc_dc_coef(bs, core->dc_diff, &core->kparam_dc[c]);
                     oapve_vlc_ac_coef(bs, core->coef, &core->kparam_ac[c]);
-                    DUMP_COEF(core->coef, OAPV_BLK_D, blk_x, blk_y, c);
+                    DUMP_COEF(core->dc_diff, core->coef + 1, OAPV_BLK_D - 1, blk_x, blk_y, c);
 
                     if(rec != NULL) {
                         r16 = (s16 *)((u8 *)rec + blk_y * s_rec) + blk_x;
@@ -1639,7 +1639,7 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
                     // parse AC coefficient
                     ret = oapvd_vlc_ac_coef(bs, core->coef, &core->kparam_ac[c]);
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
-                    DUMP_COEF(core->coef, OAPV_BLK_D, blk_x, blk_y, c);
+                    DUMP_COEF(core->dc_diff, core->coef + 1, OAPV_BLK_D - 1, blk_x, blk_y, c);
 
                     // decode a block
                     ret = dec_block(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);

@@ -401,13 +401,14 @@ void oapv_dump_string0(int cond, const char *fmt, ...)
     va_end(args);
 }
 
-void oapv_dump_coef0(short *coef, int size, int x, int y, int c)
+void oapv_dump_coef0(int dc, short *coef, int size, int x, int y, int c)
 {
     if(!DUMP_ENABLE_COEF || !oapv_is_dump)
         return;
 
     fprintf(oapv_fp_dump, "x pos : % d y pos : % d comp : % d\n", x, y, c);
     fprintf(oapv_fp_dump, "coef:");
+    fprintf(oapv_fp_dump, " %d", dc);
     for(int i = 0; i < size; i++) {
         fprintf(oapv_fp_dump, " %d", coef[i]);
     }

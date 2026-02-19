@@ -171,7 +171,7 @@ extern FILE *oapv_fp_dump;
 extern int   oapv_is_dump;
 
 void oapv_dump_string0(int cond, const char *fmt, ...);
-void oapv_dump_coef0(short *coef, int size, int x, int y, int c);
+void oapv_dump_coef0(int dc, short *coef, int size, int x, int y, int c);
 void oapv_dump_create0(int is_enc);
 void oapv_dump_delete0();
 
@@ -181,8 +181,8 @@ void oapv_dump_delete0();
 #define DUMP_SET(val)       oapv_is_dump = val
 #define DUMP_HLS(name, val) \
     oapv_dump_string0(OAPV_DUMP_HLS, "%-34s: %12d\n", #name, val)
-#define DUMP_COEF(coef, size, x, y, c) \
-    oapv_dump_coef0(coef, size, x, y, c)
+#define DUMP_COEF(dc, coef, size, x, y, c) \
+    oapv_dump_coef0(dc, coef, size, x, y, c)
 #define DUMP_SAVE(id) long dump32u8i90432890_##id = ftell(oapv_fp_dump)
 #define DUMP_LOAD(id) fseek(oapv_fp_dump, dump32u8i90432890_##id, SEEK_SET)
 #else
@@ -190,7 +190,7 @@ void oapv_dump_delete0();
 #define DUMP_DELETE()
 #define DUMP_SET(val)
 #define DUMP_HLS(name, val)
-#define DUMP_COEF(coef, size, args, ...)
+#define DUMP_COEF(dc, coef, size, args, ...)
 #define DUMP_SAVE(id)
 #define DUMP_LOAD(id)
 #endif

@@ -450,6 +450,7 @@ int oapve_vlc_pbu_size(oapv_bs_t *bs, int pbu_size)
 
 int oapve_vlc_pbu_header(oapv_bs_t *bs, int pbu_type, int group_id)
 {
+    DUMP_HLS(pbu_size, 0);
     oapv_bsw_write(bs, pbu_type, 8);
     DUMP_HLS(pbu_type, pbu_type);
     oapv_bsw_write(bs, group_id, 16);
@@ -466,6 +467,8 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
     bs_pos_md = oapv_bsw_sink(bs);
 
     oapv_bsw_write(bs, 0, 32); // raw bitstream byte size (skip)
+    DUMP_SAVE(0);
+    DUMP_HLS(metadata_size, 0);
 
     oapv_mdp_t *mdp = md->md_payload;
 
@@ -498,7 +501,10 @@ int oapve_vlc_metadata(oapv_md_t *md, oapv_bs_t *bs)
     }
     u32 md_size = (u32)((u8 *)oapv_bsw_sink(bs) - bs_pos_md) - 4;
     oapv_bsw_write_direct(bs_pos_md, md_size, 32);
+    DUMP_SAVE(1);
+    DUMP_LOAD(0);
     DUMP_HLS(metadata_size, md_size);
+    DUMP_LOAD(1);
 
     return OAPV_OK;
 }
