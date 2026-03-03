@@ -322,6 +322,7 @@ static void print_stat_frm(oapvd_stat_t *stat, oapv_frms_t *frms, oapvm_t mid, a
                              : finfo[i].cs == OAPV_CS_YCBCR444_12LE ? "4:4:4-12"
                              : finfo[i].cs == OAPV_CS_YCBCR4444_10LE ? "4:4:4:4-10"
                              : finfo[i].cs == OAPV_CS_YCBCR4444_12LE ? "4:4:4:4-12"
+                             : finfo[i].cs == OAPV_CS_YCBCR4444_16LE ? "4:4:4:4-12c16"
                              : "unknown-cs";
 
         // clang-format on

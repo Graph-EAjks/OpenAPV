@@ -1100,7 +1100,8 @@ int main(int argc, const char **argv)
         param->profile_idc == OAPV_PROFILE_4444_10) ? 10 : (
         param->profile_idc == OAPV_PROFILE_422_12 ||
         param->profile_idc == OAPV_PROFILE_444_12 ||
-        param->profile_idc == OAPV_PROFILE_4444_12) ? 12 : 0;
+        param->profile_idc == OAPV_PROFILE_4444_12) ? 12 : (
+        param->profile_idc == OAPV_PROFILE_4444_12C16) ? 16 : 0;
 
     if (codec_depth == 0) {
         logerr("ERR: invalid profile\n");

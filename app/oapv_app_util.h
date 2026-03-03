@@ -407,10 +407,10 @@ static int imgb_read(FILE *fp, oapv_imgb_t *img, int width, int height, int is_y
     }
 
     /* reading YUV format */
-    int chroma_format = OAPV_CS_GET_FORMAT(img->cs);
+    int color_format = OAPV_CS_GET_FORMAT(img->cs);
     int bit_depth = OAPV_CS_GET_BIT_DEPTH(img->cs);
-    int w_shift = (chroma_format == OAPV_CF_YCBCR420) || ((chroma_format == OAPV_CF_YCBCR422) || (chroma_format == OAPV_CF_PLANAR2)) ? 1 : 0;
-    int h_shift = chroma_format == OAPV_CF_YCBCR420 ? 1 : 0;
+    int w_shift = (color_format == OAPV_CF_YCBCR420) || ((color_format == OAPV_CF_YCBCR422) || (color_format == OAPV_CF_PLANAR2)) ? 1 : 0;
+    int h_shift = color_format == OAPV_CF_YCBCR420 ? 1 : 0;
 
     if(bit_depth == 8) {
         f_w = width;
@@ -433,7 +433,7 @@ static int imgb_read(FILE *fp, oapv_imgb_t *img, int width, int height, int is_y
         p8 += img->s[0];
     }
 
-    if(chroma_format == OAPV_CF_PLANAR2) {
+    if(color_format == OAPV_CF_PLANAR2) {
         p8 = (unsigned char *)img->a[1];
         for(int j = 0; j < f_h; j++) {
             if(fread(p8, 1, f_w, fp) != (unsigned)f_w) {
@@ -442,7 +442,7 @@ static int imgb_read(FILE *fp, oapv_imgb_t *img, int width, int height, int is_y
             p8 += img->s[1];
         }
     }
-    else if(chroma_format != OAPV_CF_YCBCR400) {
+    else if(color_format != OAPV_CF_YCBCR400) {
         f_w = f_w >> w_shift;
         f_h = f_h >> h_shift;
 
@@ -463,7 +463,7 @@ static int imgb_read(FILE *fp, oapv_imgb_t *img, int width, int height, int is_y
         }
     }
 
-    if(chroma_format == OAPV_CF_YCBCR4444) {
+    if(color_format == OAPV_CF_YCBCR4444) {
         f_w = f_w >> w_shift;
         f_h = f_h >> h_shift;
 

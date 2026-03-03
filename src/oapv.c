@@ -967,6 +967,7 @@ static int enc_profile_spec[][5] = {
     {OAPV_PROFILE_444_12, 2, 3, 10, 12},
     {OAPV_PROFILE_4444_10, 2, 4, 10, 10},
     {OAPV_PROFILE_4444_12, 2, 4, 10, 12},
+    {OAPV_PROFILE_4444_12C16, 3, 4, 12, 12},
     {OAPV_PROFILE_400_10, 0, 0, 10, 10},
     {0, 0, 0, 0, 0} // termination
 };

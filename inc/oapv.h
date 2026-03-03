@@ -164,6 +164,7 @@ extern "C" {
 #define OAPV_CS_YCBCR422_12LE           OAPV_CS_SET(OAPV_CF_YCBCR422, 12, 0)
 #define OAPV_CS_YCBCR444_12LE           OAPV_CS_SET(OAPV_CF_YCBCR444, 12, 0)
 #define OAPV_CS_YCBCR4444_12LE          OAPV_CS_SET(OAPV_CF_YCBCR4444, 12, 0)
+#define OAPV_CS_YCBCR4444_16LE          OAPV_CS_SET(OAPV_CF_YCBCR4444, 16, 0)
 #define OAPV_CS_P210                    OAPV_CS_SET(OAPV_CF_PLANAR2, 10, 0)
 
 /* max number of color channel: ex) YCbCr4444 -> 4 channels */
@@ -239,6 +240,7 @@ extern "C" {
 #define OAPV_PROFILE_444_12             (66)
 #define OAPV_PROFILE_4444_10            (77)
 #define OAPV_PROFILE_4444_12            (88)
+#define OAPV_PROFILE_4444_12C16         (90)
 #define OAPV_PROFILE_400_10             (99)
 
 /*****************************************************************************
@@ -450,6 +452,7 @@ static const oapv_dict_str_int_t oapv_param_opts_profile[] = {
     {"444-12", OAPV_PROFILE_444_12},
     {"4444-10", OAPV_PROFILE_4444_10},
     {"4444-12", OAPV_PROFILE_4444_12},
+    {"4444-12c16", OAPV_PROFILE_4444_12C16},
     {"400-10", OAPV_PROFILE_400_10},
     {"", 0} // termination
 };
