@@ -2033,7 +2033,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             stat->frm_size[frame_cnt] = pbu_size + 4 /* byte size of 'pbu_size' syntax */;
             frame_cnt++;
 
-            oapv_assert_g(OAPV_SUCCEEDED(ret_thread), ERR);
+            oapv_assert_gv(OAPV_SUCCEEDED(ret_thread), ret, ret_thread, ERR);
         }
         else if(pbuh.pbu_type == OAPV_PBU_TYPE_METADATA) {
             ret = oapvd_vlc_metadata(bs, pbu_size, mid, pbuh.group_id);
