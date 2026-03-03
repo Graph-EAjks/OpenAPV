@@ -650,6 +650,8 @@ static int dec_vlc_read_kparam0(oapv_bs_t *bs)
             k++;
         }
     }
+    oapv_assert_rv(k < 32, -1); /* prevent too large (impossible) k value */
+
     if(k > 0) {
         symbol += ((u32)0xFFFFFFFF) >> (32 - k);
 
@@ -736,6 +738,9 @@ static int dec_vlc_read(oapv_bs_t *bs, int k)
             }
         }
     }
+
+    oapv_assert_rv(k < 32, -1); /* prevent too large (impossible) k value */
+
     if(k > 0) {
         while(bs->leftbits < k) {
             symbol += bs->code >> (64 - k);
@@ -857,6 +862,8 @@ int oapvd_vlc_ac_coef(oapv_bs_t *bs, s16 *coef, int *kparam_ac)
         else {
             run = dec_vlc_read(bs, k_run);
         }
+
+        oapv_assert_rv(run >= 0, OAPV_ERR_MALFORMED_BITSTREAM);
 
         // here, no need to set 'zero-run' in coef; it's already initialized to zero.
 
