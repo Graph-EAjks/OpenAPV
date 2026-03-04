@@ -2025,7 +2025,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             if(ret == OAPV_OK && ctx->use_frm_hash) {
                 oapv_imgb_set_md5(ctx->imgb);
             }
-            ret = dec_frm_finish(ctx); // FIX-ME
+            ret = dec_frm_finish(ctx);
             oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
 
             ofrms->frm[frame_cnt].pbu_type = pbuh.pbu_type;
@@ -2033,6 +2033,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             stat->frm_size[frame_cnt] = pbu_size + 4 /* byte size of 'pbu_size' syntax */;
             frame_cnt++;
 
+            /* here, check return values of each thread */
             oapv_assert_gv(OAPV_SUCCEEDED(ret_thread), ret, ret_thread, ERR);
         }
         else if(pbuh.pbu_type == OAPV_PBU_TYPE_METADATA) {
