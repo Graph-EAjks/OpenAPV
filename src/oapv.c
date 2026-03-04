@@ -967,7 +967,7 @@ static int enc_profile_spec[][5] = {
     {OAPV_PROFILE_444_12, 2, 3, 10, 12},
     {OAPV_PROFILE_4444_10, 2, 4, 10, 10},
     {OAPV_PROFILE_4444_12, 2, 4, 10, 12},
-    {OAPV_PROFILE_4444_12C16, 3, 4, 12, 12},
+    {OAPV_PROFILE_4444_12C16, 3, 4, 16, 16},
     {OAPV_PROFILE_400_10, 0, 0, 10, 10},
     {0, 0, 0, 0, 0} // termination
 };
@@ -1030,12 +1030,22 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapve_param_t *param, oapv_imgb_t *
     }
     // color information
     ctx->cfi = color_format_to_chroma_format_idc(OAPV_CS_GET_FORMAT(imgb_i->cs));
-    ctx->bit_depth = OAPV_CS_GET_BIT_DEPTH(imgb_i->cs);
+    ctx->bit_depth_inp = OAPV_CS_GET_BIT_DEPTH(imgb_i->cs);
     ctx->num_comp = get_num_comp(ctx->cfi);
 
     // check whether input frame type is suitable to profile definition
-    ret = enc_check_profile(param->profile_idc, ctx->cfi, ctx->bit_depth);
+    ret = enc_check_profile(param->profile_idc, ctx->cfi, ctx->bit_depth_inp);
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
+
+    // check internal bit-depth and companding option
+    if(param->profile_idc == OAPV_PROFILE_4444_12C16 && ctx->bit_depth == 16) {
+        ctx->bit_depth = 12; // use 12bit internal bit-depth
+        ctx->use_companding = 1;
+    }
+    else {
+        ctx->bit_depth = ctx->bit_depth_inp;
+        ctx->use_companding = 0;
+    }
 
     // shift parameter for each color component
     ctx->comp_sft[Y_C][0] = 0;

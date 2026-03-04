@@ -81,7 +81,7 @@ static const args_opt_t enc_args_opts[] = {
         'q',  "qp", ARGS_VAL_TYPE_STRING, 0, NULL,
         "QP value: 0 ~ (63 + (bitdepth - 10)*6) \n"
         "      - 10bit input: 0 ~ 63\n"
-        "      - 12bit input: 0 ~ 75\n"
+        "      - 12bit input and 12C16bit: 0 ~ 75\n"
         "      - 'auto' means that the value is internally determined"
     },
     {
@@ -99,7 +99,7 @@ static const args_opt_t enc_args_opts[] = {
     },
     {
         'd',  "input-depth", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "input bit depth (8, 10-12)\n"
+        "input bit depth (8, 10-12, 16)\n"
         "      - Note: 8bit input will be converted to 10bit"
     },
     {
@@ -127,10 +127,11 @@ static const args_opt_t enc_args_opts[] = {
         "profile string\n"
         "      - 422-10: YCbCr422 10bit (default)\n"
         "      - 422-12; YCbCr422 12bit\n"
-        "      - 444-10: YCbCr444 10bit\n"
-        "      - 444-12; YCbCr444 12bit\n"
-        "      - 4444-10: YCbCr4444 10bit\n"
-        "      - 4444-12; YCbCr4444 12bit\n"
+        "      - 444-10: YCbCr(RGB)444 10bit\n"
+        "      - 444-12; YCbCr(RGB)444 12bit\n"
+        "      - 4444-10: YCbCrX(RGBA)4444 10bit\n"
+        "      - 4444-12: YCbCrX(RGBA)4444 12bit\n"
+        "      - 4444-12C16: YCbCrX(RGBA)4444 12bit companded from 16bit\n"
         "      - 400-10: YCbCr400 (monochrome) 10bit\n"
         "      Note: Color space and bit depth of input video will be converted\n"
         "            automatically to support the given profile, if needs\n"
@@ -1032,7 +1033,7 @@ int main(int argc, const char **argv)
 
     if(strlen(args_var->fname_rec) > 0) {
         ret = check_file_name_type(args_var->fname_rec);
-        if(ret > 0) {
+        if(ret > 0 && args_var->input_csp != 16) {
             is_rec_y4m = 1;
         }
         else if(ret == 0) {

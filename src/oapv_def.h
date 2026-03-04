@@ -288,7 +288,8 @@ struct oapve_ctx {
     int                       h;
     int                       cfi;
     int                       num_comp;
-    int                       bit_depth;
+    int                       bit_depth; // bit-depth of internal part
+    int                       bit_depth_inp; // bit-depth of input video
     int                       comp_sft[N_C][2];
     oapv_tpool_t             *tpool;
     oapv_thread_t             thread_id[OAPV_MAX_THREADS];
@@ -316,6 +317,7 @@ struct oapve_ctx {
 
     int                       threads; // num of thread for encoding
     int                       au_bs_fmt; // access unit bitstream format
+    int                       use_companding;
     /* platform specific data, if needed */
     void                     *pf;
 };
@@ -399,6 +401,7 @@ struct oapvd_ctx {
     int                     num_comp;         // number of components
     int                     comp_sft[N_C][2]; // width or height shift value of each compoents, 0: width, 1: height
     int                     use_frm_hash;
+    int                     use_companding;
 
     /* platform specific data, if needed */
     void                   *pf;
