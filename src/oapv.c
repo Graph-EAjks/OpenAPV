@@ -152,15 +152,29 @@ static void imgb_to_blk(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int
 static void imgb_to_blk_16(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
 {
     const int mid_val = (1 << (bd - 1));
-    s16      *s = (s16 *)src;
+    u16      *s = (u16 *)src;
     s16      *d = (s16 *)dst;
 
-    for(int h = 0; h < blk_h; h++) {
-        for(int w = 0; w < blk_w; w++) {
-            d[w] = s[w] - mid_val;
+    if(comp) {
+        u16 p12;
+
+        for(int h = 0; h < blk_h; h++) {
+            for(int w = 0; w < blk_w; w++) {
+                p12 = OAPV_COMP_16C12(s[w]);
+                d[w] = p12 - mid_val;
+            }
+            s = (u16 *)(((u8 *)s) + s_src);
+            d = (s16 *)(((u8 *)d) + s_dst);
         }
-        s = (s16 *)(((u8 *)s) + s_src);
-        d = (s16 *)(((u8 *)d) + s_dst);
+    }
+    else {
+        for(int h = 0; h < blk_h; h++) {
+            for(int w = 0; w < blk_w; w++) {
+                d[w] = s[w] - mid_val;
+            }
+            s = (u16 *)(((u8 *)s) + s_src);
+            d = (s16 *)(((u8 *)d) + s_dst);
+        }
     }
 }
 
@@ -235,12 +249,25 @@ static void blk_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offse
     s16      *s = (s16 *)src;
     u16      *d = (u16 *)dst;
 
-    for(int h = 0; h < blk_h; h++) {
-        for(int w = 0; w < blk_w; w++) {
-            d[w] = oapv_clip3(0, max_val, s[w] + mid_val);
+    if(comp) {
+        u16 p12;
+        for(int h = 0; h < blk_h; h++) {
+            for(int w = 0; w < blk_w; w++) {
+                p12 = oapv_clip3(0, max_val, s[w] + mid_val);
+                d[w] = OAPV_COMP_12E16(p12);
+            }
+            s = (s16 *)(((u8 *)s) + s_src);
+            d = (u16 *)(((u8 *)d) + s_dst);
         }
-        s = (s16 *)(((u8 *)s) + s_src);
-        d = (u16 *)(((u8 *)d) + s_dst);
+    }
+    else {
+        for(int h = 0; h < blk_h; h++) {
+            for(int w = 0; w < blk_w; w++) {
+                d[w] = oapv_clip3(0, max_val, s[w] + mid_val);
+            }
+            s = (s16 *)(((u8 *)s) + s_src);
+            d = (u16 *)(((u8 *)d) + s_dst);
+        }
     }
 }
 
@@ -1038,7 +1065,7 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapve_param_t *param, oapv_imgb_t *
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
     // check internal bit-depth and companding option
-    if(param->profile_idc == OAPV_PROFILE_4444_12C16 && ctx->bit_depth == 16) {
+    if(param->profile_idc == OAPV_PROFILE_4444_12C16 && ctx->bit_depth_inp == 16) {
         ctx->bit_depth = 12; // use 12bit internal bit-depth
         ctx->use_compand = 1;
     }
