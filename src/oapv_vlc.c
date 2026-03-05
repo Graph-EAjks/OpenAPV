@@ -168,7 +168,7 @@ static u64 enc_vlc_write_to_code(oapv_bs_t *bs, int val, int k, int *nbits)
 
 static int enc_vlc_quantization_matrix(oapv_bs_t *bs, oapve_ctx_t *ctx, oapv_fh_t *fh)
 {
-    for(int cidx = 0; cidx < ctx->num_comp; cidx++) {
+    for(int cidx = 0; cidx < ctx->num_c; cidx++) {
         for(int y = 0; y < 8; y++) {
             for(int x = 0; x < 8; x++) {
                 oapv_bsw_write(bs, fh->q_matrix[cidx][y][x], 8);
@@ -295,7 +295,7 @@ void oapve_set_frame_header(oapve_ctx_t *ctx, oapv_fh_t *fh)
 
     fh->use_q_matrix = param->use_q_matrix;
     if(fh->use_q_matrix == 0) {
-        for(int cidx = 0; cidx < ctx->num_comp; cidx++) {
+        for(int cidx = 0; cidx < ctx->num_c; cidx++) {
             for(int y = 0; y < OAPV_BLK_H; y++) {
                 for(int x = 0; x < OAPV_BLK_W; x++) {
                     fh->q_matrix[cidx][y][x] = 16;
@@ -318,7 +318,7 @@ void oapve_set_tile_header(oapve_ctx_t *ctx, oapv_th_t *th, int tile_idx, int qp
 {
     oapv_mset(th, 0, sizeof(oapv_th_t));
 
-    for(int c = 0; c < ctx->num_comp; c++) {
+    for(int c = 0; c < ctx->num_c; c++) {
         th->tile_qp[c] = oapv_clip3(MIN_QUANT, MAX_QUANT(10), qp + ctx->qp_offset[c]);
     }
     th->tile_index = tile_idx;
@@ -397,17 +397,17 @@ int oapve_vlc_tile_header(oapve_ctx_t *ctx, oapv_bs_t *bs, oapv_th_t *th)
 {
     oapv_assert_rv(bsw_is_align8(bs), OAPV_ERR_MALFORMED_BITSTREAM);
     th->tile_header_size = 5;                    // tile_header_size + tile_index + reserved_zero_8bits
-    th->tile_header_size += (ctx->num_comp * 5); // tile_data_size + tile_qp
+    th->tile_header_size += (ctx->num_c * 5); // tile_data_size + tile_qp
 
     oapv_bsw_write(bs, th->tile_header_size, 16);
     DUMP_HLS(th->tile_header_size, th->tile_header_size);
     oapv_bsw_write(bs, th->tile_index, 16);
     DUMP_HLS(th->tile_index, th->tile_index);
-    for(int c = 0; c < ctx->num_comp; c++) {
+    for(int c = 0; c < ctx->num_c; c++) {
         oapv_bsw_write(bs, th->tile_data_size[c], 32);
         DUMP_HLS(th->tile_data_size, th->tile_data_size[c]);
     }
-    for(int c = 0; c < ctx->num_comp; c++) {
+    for(int c = 0; c < ctx->num_c; c++) {
         oapv_bsw_write(bs, th->tile_qp[c], 8);
         DUMP_HLS(th->tile_qp, th->tile_qp[c]);
     }

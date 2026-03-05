@@ -35,15 +35,15 @@ int oapve_rc_get_tile_cost(oapve_ctx_t* ctx, oapve_core_t* core, oapve_tile_t* t
 {
     int sum = 0;
     tile->rc.number_pixel = 0;
-    for (int c = Y_C; c < ctx->num_comp; c++) {
-        int step_w = 8 << ctx->comp_sft[c][0];
-        int step_h = 8 << ctx->comp_sft[c][1];
+    for (int c = Y_C; c < ctx->num_c; c++) {
+        int step_w = 8 << ctx->c_sft[c][0];
+        int step_h = 8 << ctx->c_sft[c][1];
         for (int y = 0; y < tile->h; y += step_h) {
             for (int x = 0; x < tile->w; x += step_w) {
                 int tx = tile->x + x;
                 int ty = tile->y + y;
 
-                ctx->fn_imgb_to_blk_rc(ctx->imgb_i, c, tx, ty, 8, 8, core->coef, ctx->bit_depth);
+                ctx->fn_imgb_to_blk_rc(ctx->imgb_i, c, tx, ty, 8, 8, core->coef, ctx->bit_depth, ctx->use_compand);
                 sum += ctx->fn_had8x8(core->coef, 8);
                 tile->rc.number_pixel += 64;
             }
@@ -130,8 +130,8 @@ static double rc_calculate_lambda(double alpha, double beta, double cost_pixel, 
 double oapve_rc_estimate_pic_lambda(oapve_ctx_t* ctx, double cost)
 {
     int num_pixel = ctx->w * ctx->h;
-    for (int c = 1; c < ctx->num_comp; c++) {
-        num_pixel += (ctx->w * ctx->h) >> (ctx->comp_sft[c][0] + ctx->comp_sft[c][1]);
+    for (int c = 1; c < ctx->num_c; c++) {
+        num_pixel += (ctx->w * ctx->h) >> (ctx->c_sft[c][0] + ctx->c_sft[c][1]);
     }
 
     double alpha = ctx->rc_param.alpha;
@@ -184,8 +184,8 @@ void oapve_rc_update_after_pic(oapve_ctx_t* ctx, double cost)
 {
     if (cost > 0) {
         int num_pixel = ctx->w * ctx->h;
-        for (int c = 1; c < ctx->num_comp; c++) {
-            num_pixel += (ctx->w * ctx->h) >> (ctx->comp_sft[c][0] + ctx->comp_sft[c][1]);
+        for (int c = 1; c < ctx->num_c; c++) {
+            num_pixel += (ctx->w * ctx->h) >> (ctx->c_sft[c][0] + ctx->c_sft[c][1]);
         }
 
         int total_bits = 0;
