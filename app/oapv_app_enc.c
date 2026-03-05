@@ -131,7 +131,7 @@ static const args_opt_t enc_args_opts[] = {
         "      - 444-12; YCbCr(RGB)444 12bit\n"
         "      - 4444-10: YCbCrX(RGBA)4444 10bit\n"
         "      - 4444-12: YCbCrX(RGBA)4444 12bit\n"
-        "      - 4444-12C16: YCbCrX(RGBA)4444 12bit companded from 16bit\n"
+        "      - 4444-16C12: YCbCrX(RGBA)4444 16bit companded to 12bit\n"
         "      - 400-10: YCbCr400 (monochrome) 10bit\n"
         "      Note: Color space and bit depth of input video will be converted\n"
         "            automatically to support the given profile, if needs\n"
@@ -1102,7 +1102,7 @@ int main(int argc, const char **argv)
         param->profile_idc == OAPV_PROFILE_422_12 ||
         param->profile_idc == OAPV_PROFILE_444_12 ||
         param->profile_idc == OAPV_PROFILE_4444_12) ? 12 : (
-        param->profile_idc == OAPV_PROFILE_4444_12C16) ? 16 : 0;
+        param->profile_idc == OAPV_PROFILE_4444_16C12) ? 16 : 0;
 
     if (codec_depth == 0) {
         logerr("ERR: invalid profile\n");

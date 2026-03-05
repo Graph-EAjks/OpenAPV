@@ -800,7 +800,7 @@ static int enc_profile_spec[][5] = {
     {OAPV_PROFILE_444_12, 2, 3, 10, 12},
     {OAPV_PROFILE_4444_10, 2, 4, 10, 10},
     {OAPV_PROFILE_4444_12, 2, 4, 10, 12},
-    {OAPV_PROFILE_4444_12C16, 3, 4, 16, 16},
+    {OAPV_PROFILE_4444_16C12, 3, 4, 16, 16},
     {OAPV_PROFILE_400_10, 0, 0, 10, 10},
     {0, 0, 0, 0, 0} // termination
 };
@@ -871,7 +871,7 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapve_param_t *param, oapv_imgb_t *
     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
     // check internal bit-depth and companding option
-    if(param->profile_idc == OAPV_PROFILE_4444_12C16 && ctx->bit_depth_inp == 16) {
+    if(param->profile_idc == OAPV_PROFILE_4444_16C12 && ctx->bit_depth_inp == 16) {
         ctx->bit_depth = 12; // use 12bit internal bit-depth
         ctx->use_compand = 1;
     }
