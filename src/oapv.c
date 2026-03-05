@@ -2006,7 +2006,7 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             ret = dec_frm_prepare(ctx, ofrms->frm[frame_cnt].imgb);
             oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
 
-            int           res;
+            int           res, ret_thread;
             oapv_tpool_t *tpool = ctx->tpool;
             int           parallel_task = 1;
             int           tidx = 0;
@@ -2018,11 +2018,11 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
                 tpool->run(ctx->thread_id[tidx], dec_thread_tile,
                            (void *)ctx->core[tidx]);
             }
-            ret = dec_thread_tile((void *)ctx->core[tidx]);
+            ret_thread = dec_thread_tile((void *)ctx->core[tidx]);
             for(tidx = 0; tidx < parallel_task - 1; tidx++) {
                 tpool->join(ctx->thread_id[tidx], &res);
                 if(OAPV_FAILED(res)) {
-                    ret = res;
+                    ret_thread = res;
                 }
             }
             /****************************************************/
@@ -2036,13 +2036,16 @@ int oapvd_decode(oapvd_t did, oapv_bitb_t *bitb, oapv_frms_t *ofrms, oapvm_t mid
             if(ret == OAPV_OK && ctx->use_frm_hash) {
                 oapv_imgb_set_md5(ctx->imgb);
             }
-            ret = dec_frm_finish(ctx); // FIX-ME
+            ret = dec_frm_finish(ctx);
             oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
 
             ofrms->frm[frame_cnt].pbu_type = pbuh.pbu_type;
             ofrms->frm[frame_cnt].group_id = pbuh.group_id;
             stat->frm_size[frame_cnt] = pbu_size + 4 /* byte size of 'pbu_size' syntax */;
             frame_cnt++;
+
+            /* here, check return values of each thread */
+            oapv_assert_gv(OAPV_SUCCEEDED(ret_thread), ret, ret_thread, ERR);
         }
         else if(pbuh.pbu_type == OAPV_PBU_TYPE_METADATA) {
             ret = oapvd_vlc_metadata(bs, pbu_size, mid, pbuh.group_id);
