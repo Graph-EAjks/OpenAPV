@@ -186,8 +186,8 @@ typedef s64 (*oapv_fn_ssd_t)(int w, int h, void *src1, void *src2, int s_src1, i
 typedef void (*oapv_fn_diff_t)(int w, int h, void *src1, void *src2, int s_src1, int s_src2, int s_diff, s16 *diff);
 
 typedef double (*oapv_fn_enc_blk_cost_t)(oapve_ctx_t *ctx, oapve_core_t *core, int log2_w, int log2_h, int c);
-typedef void (*oapv_fn_imgb_to_blk_rc_t)(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd, int comp);
-typedef void (*oapv_fn_imgb_to_blk_t)(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp);
+typedef void (*oapv_fn_blk_from_imgb_rc_t)(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd, int comp);
+typedef void (*oapv_fn_blk_from_imgb_t)(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp);
 typedef void (*oapv_fn_blk_to_imgb_t)(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd, int comp);
 typedef void (*oapv_fn_imgb_pad_t)(oapv_imgb_t *imgb, int aw, int ah, int comp_sft[N_C][2]);
 typedef int (*oapv_fn_had8x8_t)(pel *org, int s_org);
@@ -269,53 +269,53 @@ struct oapve_tile {
  * All have to be stored are in this structure.
  *****************************************************************************/
 struct oapve_ctx {
-    u32                       magic; // magic code
-    oapve_t                   id;    // identifier
-    oapve_cdesc_t             cdesc;
-    oapve_core_t             *core[OAPV_MAX_THREADS];
-    oapv_imgb_t              *imgb_i;
-    oapv_imgb_t              *imgb_r;
-    oapve_param_t            *param;
-    oapv_fh_t                 fh;
-    oapve_tile_t              tile[OAPV_MAX_TILES];
-    oapve_rc_param_t          rc_param;
-    oapv_tpool_t             *tpool;
-    oapv_thread_t             thread_id[OAPV_MAX_THREADS];
-    oapv_sync_obj_t           sync_obj;
-    int                       threads; // num of thread for encoding
-    int                       au_bs_fmt; // access unit bitstream format
-    int                       num_tiles_frms[OAPV_MAX_NUM_FRAMES];
-    int                       num_tiles;
-    int                       num_tile_cols;
-    int                       num_tile_rows;
-    int                       qp[N_C];
-    s8                        qp_offset[N_C];
-    int                       w;
-    int                       h;
-    int                       cfi;
-    int                       num_c;         // number of components
-    int                       bit_depth;     // bit-depth of internal part
-    int                       bit_depth_inp; // bit-depth of input video
-    int                       c_sft[N_C][2]; // width or height shift value of each compoents, 0: width, 1: height
-    int                       use_frm_hash;
-    int                       use_compand;
+    u32                        magic; // magic code
+    oapve_t                    id;    // identifier
+    oapve_cdesc_t              cdesc;
+    oapve_core_t              *core[OAPV_MAX_THREADS];
+    oapv_imgb_t               *imgb_i;
+    oapv_imgb_t               *imgb_r;
+    oapve_param_t             *param;
+    oapv_fh_t                  fh;
+    oapve_tile_t               tile[OAPV_MAX_TILES];
+    oapve_rc_param_t           rc_param;
+    oapv_tpool_t              *tpool;
+    oapv_thread_t              thread_id[OAPV_MAX_THREADS];
+    oapv_sync_obj_t            sync_obj;
+    int                        threads; // num of thread for encoding
+    int                        au_bs_fmt; // access unit bitstream format
+    int                        num_tiles_frms[OAPV_MAX_NUM_FRAMES];
+    int                        num_tiles;
+    int                        num_tile_cols;
+    int                        num_tile_rows;
+    int                        qp[N_C];
+    s8                         qp_offset[N_C];
+    int                        w;
+    int                        h;
+    int                        cfi;
+    int                        num_c;         // number of components
+    int                        bit_depth;     // bit-depth of internal part
+    int                        bit_depth_inp; // bit-depth of input video
+    int                        c_sft[N_C][2]; // width or height shift value of each compoents, 0: width, 1: height
+    int                        use_frm_hash;
+    int                        use_compand;
 
-    const oapv_fn_itx_part_t *fn_itx_part;
-    const oapv_fn_itx_t      *fn_itx;
-    const oapv_fn_itx_adj_t  *fn_itx_adj;
-    const oapv_fn_tx_t       *fn_txb;
-    const oapv_fn_quant_t    *fn_quant;
-    const oapv_fn_dquant_t   *fn_dquant;
-    const oapv_fn_sad_t      *fn_sad;
-    const oapv_fn_ssd_t      *fn_ssd;
-    const oapv_fn_diff_t     *fn_diff;
+    const oapv_fn_itx_part_t  *fn_itx_part;
+    const oapv_fn_itx_t       *fn_itx;
+    const oapv_fn_itx_adj_t   *fn_itx_adj;
+    const oapv_fn_tx_t        *fn_txb;
+    const oapv_fn_quant_t     *fn_quant;
+    const oapv_fn_dquant_t    *fn_dquant;
+    const oapv_fn_sad_t       *fn_sad;
+    const oapv_fn_ssd_t       *fn_ssd;
+    const oapv_fn_diff_t      *fn_diff;
 
-    oapv_fn_imgb_to_blk_rc_t  fn_imgb_to_blk_rc;
-    oapv_fn_imgb_to_blk_t     fn_imgb_to_blk[N_C];
-    oapv_fn_blk_to_imgb_t     fn_blk_to_imgb[N_C];
-    oapv_fn_imgb_pad_t        fn_imgb_pad;
-    oapv_fn_enc_blk_cost_t    fn_enc_blk;
-    oapv_fn_had8x8_t          fn_had8x8;
+    oapv_fn_blk_from_imgb_rc_t fn_blk_from_imgb_rc;
+    oapv_fn_blk_from_imgb_t    fn_blk_from_imgb[N_C];
+    oapv_fn_blk_to_imgb_t      fn_blk_to_imgb[N_C];
+    oapv_fn_imgb_pad_t         fn_imgb_pad;
+    oapv_fn_enc_blk_cost_t     fn_enc_blk;
+    oapv_fn_had8x8_t           fn_had8x8;
 
     /* platform specific data, if needed */
     void                     *pf;
@@ -420,7 +420,7 @@ struct oapvd_ctx {
 #include "oapv_rc.h"
 #include "oapv_sad.h"
 #include "oapv_param.h"
-#include "oapv_comp.h"
+#include "oapv_blk.h"
 
 #if X86_SSE
 #include "sse/oapv_sad_sse.h"

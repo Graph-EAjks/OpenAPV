@@ -1283,7 +1283,7 @@ int main(int argc, const char **argv)
             bitrate_tot, psnr_avg[FRM_IDX][0]);
     }
     else if(cfmt == OAPV_CF_YCBCR4444) { // 4-channel
-        logv3("  -----------------: bitrate(kbps)\tPSNR-Y\tPSNR-U\tPSNR-V\tPSNR-T\n");
+        logv3("  -----------------: bitrate(kbps)\tPSNR-Y\tPSNR-U\tPSNR-V\tPSNR-X\n");
         logv3("  Summary          : %-4.4f\t%-5.4f\t%-5.4f\t%-5.4f\t%-5.4f\n",
               bitrate_tot, psnr_avg[FRM_IDX][0], psnr_avg[FRM_IDX][1], psnr_avg[FRM_IDX][2], psnr_avg[FRM_IDX][3]);
     }
