@@ -1755,8 +1755,8 @@ static int dec_thread_tile(void *arg)
         ret = oapvd_vlc_tile_size(&bs, &tile[tile_idx].tile_size);
         oapv_assert_g(OAPV_SUCCEEDED(ret), ERR);
 
-        /* check the tile data size */
-        oapv_assert_g((OAPV_TILE_SIZE_LEN + tile[tile_idx].tile_size) <= (ctx->bs.end - tile[tile_idx].bs_beg + 1), ERR);
+        /* check the tile size is smaller than input bitstream size */
+        oapv_assert_gv(tile[tile_idx].bs_beg + tile[tile_idx].tile_size + OAPV_TILE_SIZE_LEN <= ctx->bs.end, ret, OAPV_ERR_MALFORMED_BITSTREAM, ERR);
 
         oapv_tpool_enter_cs(ctx->sync_obj);
         if(tile_idx + 1 < ctx->num_tiles) {
