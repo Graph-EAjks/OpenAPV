@@ -240,8 +240,9 @@ extern "C" {
 #define OAPV_PROFILE_444_12             (66)
 #define OAPV_PROFILE_4444_10            (77)
 #define OAPV_PROFILE_4444_12            (88)
-#define OAPV_PROFILE_4444_16C12         (90)
 #define OAPV_PROFILE_400_10             (99)
+#define OAPV_PROFILE_4444_16C12         (170)
+
 
 /*****************************************************************************
  * family
@@ -416,6 +417,7 @@ struct oapv_frm_info {
     int           chroma_format_idc;
     int           bit_depth;
     int           capture_time_distance;
+    int           use_companding;
     // flag for custom quantization matrix
     int           use_q_matrix;
     // q_matrix is meaningful if use_q_matrix is true

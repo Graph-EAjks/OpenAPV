@@ -284,9 +284,10 @@ void oapve_set_frame_header(oapve_ctx_t *ctx, oapv_fh_t *fh)
     fh->fi.frame_height = param->h;
     fh->fi.chroma_format_idc = ctx->cfi;
     fh->fi.bit_depth = ctx->bit_depth;
+    fh->fi.use_companding = ctx->use_companding;
+
     fh->tile_width_in_mbs = param->tile_w / OAPV_MB_W;
     fh->tile_height_in_mbs = param->tile_h / OAPV_MB_H;
-
     fh->color_description_present_flag = param->color_description_present_flag;
     fh->color_primaries = param->color_primaries;
     fh->transfer_characteristics = param->transfer_characteristics;
@@ -349,7 +350,9 @@ int oapve_vlc_frame_info(oapv_bs_t *bs, oapv_fi_t *fi)
     DUMP_HLS(fi->bit_depth, fi->bit_depth - 8);
     oapv_bsw_write(bs, fi->capture_time_distance, 8);
     DUMP_HLS(fi->capture_time_distance, fi->capture_time_distance);
-    oapv_bsw_write(bs, 0, 8); // reserved_zero_8bits
+    oapv_bsw_write1(bs, fi->use_companding);
+    DUMP_HLS(fi->use_companding, fi->use_companding);
+    oapv_bsw_write(bs, 0, 7); // reserved_zero_7bits
     DUMP_HLS(reserved_zero, 0);
     return OAPV_OK;
 }
@@ -986,7 +989,13 @@ int oapvd_vlc_frame_info(oapv_bs_t *bs, oapv_fi_t *fi)
     fi->capture_time_distance = oapv_bsr_read(bs, 8);
     DUMP_HLS(fi->capture_time_distance, fi->capture_time_distance);
 
-    reserved_zero = oapv_bsr_read(bs, 8);
+    fi->use_companding = oapv_bsr_read1(bs);
+    DUMP_HLS(fi->use_companding, fi->use_companding);
+    if(fi->profile_idc != OAPV_PROFILE_4444_16C12) {
+        oapv_assert_rv(fi->use_companding == 0, OAPV_ERR_MALFORMED_BITSTREAM);
+    }
+
+    reserved_zero = oapv_bsr_read(bs, 7);
     DUMP_HLS(reserved_zero, reserved_zero);
     oapv_assert_rv(reserved_zero == 0, OAPV_ERR_MALFORMED_BITSTREAM);
 

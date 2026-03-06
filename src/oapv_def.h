@@ -108,7 +108,8 @@ struct oapv_fi {     // 112byte
     int chroma_format_idc;     /* u( 4) */
     int bit_depth;             /* u( 4) */
     int capture_time_distance; /* u( 8) */
-    // int            reserved_zero_8bits;                     /* u( 8) */
+    int use_companding;        /* u( 1) */
+    // int            reserved_zero_7bits;                     /* u( 7) */
 };
 
 /*****************************************************************************
@@ -298,7 +299,7 @@ struct oapve_ctx {
     int                        bit_depth_inp; // bit-depth of input video
     int                        c_sft[N_C][2]; // width or height shift value of each compoents, 0: width, 1: height
     int                        use_frm_hash;
-    int                        use_compand;
+    int                        use_companding;
 
     const oapv_fn_itx_part_t  *fn_itx_part;
     const oapv_fn_itx_t       *fn_itx;
