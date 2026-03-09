@@ -34,16 +34,32 @@
 int oapve_rc_get_tile_cost(oapve_ctx_t* ctx, oapve_core_t* core, oapve_tile_t* tile)
 {
     int sum = 0;
+    s16* org = NULL;
+    s16* pic = NULL;
+    int  org_s;
+
     tile->rc.number_pixel = 0;
     for (int c = Y_C; c < ctx->num_c; c++) {
         int step_w = 8 << ctx->c_sft[c][0];
         int step_h = 8 << ctx->c_sft[c][1];
+
+        if (OAPV_CS_GET_FORMAT(ctx->imgb_i->cs) == OAPV_CF_PLANAR2) {
+            int tc = c > 0 ? 1 : 0;
+            org = ctx->imgb_i->a[tc];
+            org += (c > 1) ? 1 : 0;
+            org_s = ctx->imgb_i->s[tc];
+        }
+        else {
+            org = ctx->imgb_i->a[c];
+            org_s = ctx->imgb_i->s[c];
+        }
+
         for (int y = 0; y < tile->h; y += step_h) {
             for (int x = 0; x < tile->w; x += step_w) {
                 int tx = tile->x + x;
                 int ty = tile->y + y;
-
-                ctx->fn_blk_from_imgb_rc(ctx->imgb_i, c, tx, ty, 8, 8, core->coef, ctx->bit_depth, ctx->use_companding);
+                pic = (s16*)((u8*)org + ty * org_s) + tx;
+                ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, 0, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, 0, ctx->use_companding);
                 sum += ctx->fn_had8x8(core->coef, 8);
                 tile->rc.number_pixel += 64;
             }

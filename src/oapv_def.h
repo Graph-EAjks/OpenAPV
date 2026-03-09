@@ -188,7 +188,7 @@ typedef void (*oapv_fn_diff_t)(int w, int h, void *src1, void *src2, int s_src1,
 
 typedef double (*oapv_fn_enc_blk_cost_t)(oapve_ctx_t *ctx, oapve_core_t *core, int log2_w, int log2_h, int c);
 typedef void (*oapv_fn_blk_from_imgb_rc_t)(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd, int comp);
-typedef void (*oapv_fn_blk_from_pic_t)(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int comp);
+typedef void (*oapv_fn_blk_from_pic_t)(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int sub_mid, int comp);
 typedef void (*oapv_fn_blk_to_pic_t)(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd, int comp);
 typedef void (*oapv_fn_imgb_pad_t)(oapv_imgb_t *imgb, int aw, int ah, int comp_sft[N_C][2]);
 typedef int (*oapv_fn_had8x8_t)(pel *org, int s_org);
@@ -311,7 +311,6 @@ struct oapve_ctx {
     const oapv_fn_ssd_t       *fn_ssd;
     const oapv_fn_diff_t      *fn_diff;
 
-    oapv_fn_blk_from_imgb_rc_t fn_blk_from_imgb_rc;
     oapv_fn_blk_from_pic_t     fn_blk_from_pic[N_C];
     oapv_fn_blk_to_pic_t       fn_blk_to_pic[N_C];
     oapv_fn_imgb_pad_t         fn_imgb_pad;
