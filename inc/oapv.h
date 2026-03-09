@@ -181,6 +181,7 @@ extern "C" {
 #define OAPV_CFG_SET_QP_MAX             (209)
 #define OAPV_CFG_SET_USE_FRM_HASH       (301)
 #define OAPV_CFG_SET_AU_BS_FMT          (302)
+#define OAPV_CFG_SET_DISABLE_COMPANDING (400)
 #define OAPV_CFG_GET_QP_MIN             (600)
 #define OAPV_CFG_GET_QP_MAX             (601)
 #define OAPV_CFG_GET_QP                 (602)
@@ -454,8 +455,8 @@ static const oapv_dict_str_int_t oapv_param_opts_profile[] = {
     {"444-12", OAPV_PROFILE_444_12},
     {"4444-10", OAPV_PROFILE_4444_10},
     {"4444-12", OAPV_PROFILE_4444_12},
-    {"4444-16C12", OAPV_PROFILE_4444_16C12},
     {"400-10", OAPV_PROFILE_400_10},
+    {"4444-16C12", OAPV_PROFILE_4444_16C12},
     {"", 0} // termination
 };
 

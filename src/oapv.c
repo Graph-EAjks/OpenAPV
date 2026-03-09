@@ -801,8 +801,8 @@ static int enc_profile_spec[][5] = {
     {OAPV_PROFILE_444_12, 2, 3, 10, 12},
     {OAPV_PROFILE_4444_10, 2, 4, 10, 10},
     {OAPV_PROFILE_4444_12, 2, 4, 10, 12},
-    {OAPV_PROFILE_4444_16C12, 3, 4, 16, 16},
     {OAPV_PROFILE_400_10, 0, 0, 10, 10},
+    {OAPV_PROFILE_4444_16C12, 3, 4, 16, 16},
     {0, 0, 0, 0, 0} // termination
 };
 
@@ -1459,7 +1459,7 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
 {
     int  mb_h, mb_w, mb_y, mb_x, blk_y, blk_x;
     int  le, ri, to, bo;
-    int  ret;
+    int  ret, comp;
     s16 *d16;
 
     mb_h = OAPV_MB_H >> ctx->c_sft[c][1];
@@ -1491,8 +1491,9 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
                     // copy decoded block to image buffer
+                    comp = (ctx->disable_companding)? 0: ctx->fh.fi.use_companding;
                     d16 = (s16 *)((u8 *)dst + blk_y * s_dst) + blk_x;
-                    ctx->fn_blk_to_imgb[c](core->coef, OAPV_BLK_W, OAPV_BLK_H, (OAPV_BLK_W << 1), blk_x, s_dst, d16, ctx->bit_depth, ctx->use_compand);
+                    ctx->fn_blk_to_imgb[c](core->coef, OAPV_BLK_W, OAPV_BLK_H, (OAPV_BLK_W << 1), blk_x, s_dst, d16, ctx->bit_depth, comp);
                 }
             }
         }
@@ -1914,6 +1915,9 @@ int oapvd_config(oapvd_t did, int cfg, void *buf, int *size)
         ctx->use_frm_hash = (*((int *)buf)) ? 1 : 0;
         break;
 
+    case OAPV_CFG_SET_DISABLE_COMPANDING:
+        ctx->disable_companding = (*((int *)buf)) ? 1 : 0;
+        break;
     default:
         oapv_assert_rv(0, OAPV_ERR_UNSUPPORTED);
     }

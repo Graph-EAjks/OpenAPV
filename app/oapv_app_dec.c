@@ -75,7 +75,8 @@ static const args_opt_t dec_args_opts[] = {
     },
     {
         'd',  "output-depth", ARGS_VAL_TYPE_INTEGER, 0, NULL,
-        "output bit depth (8, 10, 12) "
+        "output bit depth (8, 10, 12)\n"
+        "      Note: This is option does not support 444/4444-16C12 profile."
     },
     {
         ARGS_NO_KEY,  "hash", ARGS_VAL_TYPE_NONE, 0, NULL,
@@ -86,6 +87,11 @@ static const args_opt_t dec_args_opts[] = {
         "output color space (chroma format)\n"
         "      - 0: coded CSP\n"
         "      - 1: convert to P210 in case of YCbCr422\n"
+    },
+    {
+        ARGS_NO_KEY,  "disable-companding", ARGS_VAL_TYPE_NONE, 0, NULL,
+        "forcely disable companding process\n"
+        "      Note: this option forces to output 12 bits picture in case of 444/4444-16C12 profile"
     },
     {ARGS_END_KEY, "", ARGS_VAL_TYPE_NONE, 0, NULL, ""} /* termination */
 };
@@ -102,6 +108,7 @@ typedef struct args_var {
     char threads[16];
     int  output_depth;
     int  output_csp;
+    int  disable_companding;
 } args_var_t;
 
 static args_var_t *args_init_vars(args_parser_t *args)
@@ -118,6 +125,7 @@ static args_var_t *args_init_vars(args_parser_t *args)
     args_set_variable_by_key_long(opts, "output", vars->fname_out);
     args_set_variable_by_key_long(opts, "max-au", &vars->max_au);
     args_set_variable_by_key_long(opts, "hash", &vars->hash);
+    args_set_variable_by_key_long(opts, "disable-companding", &vars->disable_companding);
     args_set_variable_by_key_long(opts, "verbose", &op_verbose);
     op_verbose = VERBOSE_SIMPLE; /* default */
     args_set_variable_by_key_long(opts, "threads", vars->threads);
@@ -216,11 +224,20 @@ static int set_extra_config(oapvd_t id, args_var_t *args_vars)
     int ret, size, value;
 
     if(args_vars->hash) { // enable frame hash calculation
-        value = 1;
+        value = 1; // true
         size = 4;
         ret = oapvd_config(id, OAPV_CFG_SET_USE_FRM_HASH, &value, &size);
         if(OAPV_FAILED(ret)) {
             logerr("failed to set config for using frame hash\n");
+            return -1;
+        }
+    }
+    if(args_vars->disable_companding) {
+        value = 1; // true
+        size = 4;
+        ret = oapvd_config(id, OAPV_CFG_SET_DISABLE_COMPANDING, &value, &size);
+        if(OAPV_FAILED(ret)) {
+            logerr("failed to set config for disabling companding process\n");
             return -1;
         }
     }
@@ -525,6 +542,9 @@ int main(int argc, const char **argv)
             }
         }
 
+        if(args_var->disable_companding && finfo->use_companding == 1) {
+            args_var->output_depth = 12;
+        }
         if(args_var->output_depth == 0) {
             args_var->output_depth = OAPV_CS_GET_BIT_DEPTH(finfo->cs);
         }
@@ -584,7 +604,7 @@ int main(int argc, const char **argv)
         for(i = 0; i < ofrms.num_frms; i++) {
             frm = &ofrms.frm[i];
             if(ofrms.num_frms > 0) {
-                if(OAPV_CS_GET_BIT_DEPTH(frm->imgb->cs) != args_var->output_depth && args_var->output_csp != 1) {
+                if(OAPV_CS_GET_BIT_DEPTH(frm->imgb->cs) != args_var->output_depth && args_var->output_csp != OUTPUT_CSP_P210) {
                     if(imgb_w == NULL) {
                         imgb_w = imgb_create(frm->imgb->w[0], frm->imgb->h[0],
                                              OAPV_CS_SET(OAPV_CS_GET_FORMAT(frm->imgb->cs), args_var->output_depth, 0));
