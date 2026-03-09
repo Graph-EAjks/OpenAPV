@@ -127,7 +127,12 @@ static void fi_to_finfo(oapv_fi_t *fi, int pbu_type, int group_id, oapv_frm_info
 {
     finfo->w = (int)fi->frame_width; // casting to 'int' would be fine here
     finfo->h = (int)fi->frame_height; // casting to 'int' would be fine here
-    finfo->cs = OAPV_CS_SET(chroma_format_idc_to_color_format(fi->chroma_format_idc), fi->bit_depth, 0);
+    if(fi->profile_idc == OAPV_PROFILE_444_16C12 || fi->profile_idc == OAPV_PROFILE_4444_16C12) {
+        finfo->cs = OAPV_CS_SET(chroma_format_idc_to_color_format(fi->chroma_format_idc), 16, 0);
+    }
+    else {
+        finfo->cs = OAPV_CS_SET(chroma_format_idc_to_color_format(fi->chroma_format_idc), fi->bit_depth, 0);
+    }
     finfo->pbu_type = pbu_type;
     finfo->group_id = group_id;
     finfo->profile_idc = fi->profile_idc;
@@ -626,7 +631,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
             for(blk_y = mb_y; blk_y < (mb_y + mb_h); blk_y += OAPV_BLK_H) {
                 for(blk_x = mb_x; blk_x < (mb_x + mb_w); blk_x += OAPV_BLK_W) {
                     o16 = (s16 *)((u8 *)org + blk_y * s_org) + blk_x;
-                    ctx->fn_blk_from_imgb[c](o16, OAPV_BLK_W, OAPV_BLK_H, s_org, blk_x, (OAPV_BLK_W << 1), core->coef, ctx->bit_depth, ctx->use_companding);
+                    ctx->fn_blk_from_pic[c](o16, OAPV_BLK_W, OAPV_BLK_H, s_org, blk_x, (OAPV_BLK_W << 1), core->coef, ctx->bit_depth, ctx->use_companding);
 
                     ctx->fn_enc_blk(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);
                     oapve_vlc_dc_coef(bs, core->dc_diff, &core->kparam_dc[c]);
@@ -635,7 +640,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
 
                     if(rec != NULL) {
                         r16 = (s16 *)((u8 *)rec + blk_y * s_rec) + blk_x;
-                        ctx->fn_blk_to_imgb[c](core->coef_rec, OAPV_BLK_W, OAPV_BLK_H, (OAPV_BLK_W << 1), blk_x, s_rec, r16, ctx->bit_depth, ctx->use_companding);
+                        ctx->fn_blk_to_pic[c](core->coef_rec, OAPV_BLK_W, OAPV_BLK_H, (OAPV_BLK_W << 1), blk_x, s_rec, r16, ctx->bit_depth, ctx->use_companding);
                     }
                 }
             }
@@ -890,22 +895,22 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapve_param_t *param, oapv_imgb_t *
     }
 
     if(OAPV_CS_GET_FORMAT(imgb_i->cs) == OAPV_CF_PLANAR2) {
-        ctx->fn_blk_from_imgb_rc = oapv_blk_from_imgb_p21x;
+        ctx->fn_blk_from_imgb_rc = oapv_blk_from_pic_p21x;
 
-        ctx->fn_blk_from_imgb[Y_C] = oapv_blk_from_imgb_p21x_y;
-        ctx->fn_blk_from_imgb[U_C] = oapv_blk_from_imgb_p21x_uv;
-        ctx->fn_blk_from_imgb[V_C] = oapv_blk_from_imgb_p21x_uv;
+        ctx->fn_blk_from_pic[Y_C] = oapv_blk_from_pic_p21x_y;
+        ctx->fn_blk_from_pic[U_C] = oapv_blk_from_pic_p21x_uv;
+        ctx->fn_blk_from_pic[V_C] = oapv_blk_from_pic_p21x_uv;
 
-        ctx->fn_blk_to_imgb[Y_C] = oapv_blk_to_imgb_p21x_y;
-        ctx->fn_blk_to_imgb[U_C] = oapv_blk_to_imgb_p21x_uv;
-        ctx->fn_blk_to_imgb[V_C] = oapv_blk_to_imgb_p21x_uv;
+        ctx->fn_blk_to_pic[Y_C] = oapv_blk_to_pic_p21x_y;
+        ctx->fn_blk_to_pic[U_C] = oapv_blk_to_pic_p21x_uv;
+        ctx->fn_blk_to_pic[V_C] = oapv_blk_to_pic_p21x_uv;
         ctx->fn_imgb_pad = imgb_pad_p210;
     }
     else {
         ctx->fn_blk_from_imgb_rc = oapv_blk_from_imgb;
         for(int i = 0; i < ctx->num_c; i++) {
-            ctx->fn_blk_from_imgb[i] = oapv_blk_from_imgb_16;
-            ctx->fn_blk_to_imgb[i] = oapv_blk_to_imgb_16;
+            ctx->fn_blk_from_pic[i] = oapv_blk_from_pic_16;
+            ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_16;
         }
         ctx->fn_imgb_pad = imgb_pad;
     }
@@ -1415,13 +1420,13 @@ static int dec_frm_prepare(oapvd_ctx_t *ctx, oapv_imgb_t *imgb)
     ctx->h = oapv_align_value(ctx->fh.fi.frame_height, OAPV_MB_H);
 
     if(OAPV_CS_GET_FORMAT(imgb->cs) == OAPV_CF_PLANAR2) {
-        ctx->fn_blk_to_imgb[Y_C] = oapv_blk_to_imgb_p21x_y;
-        ctx->fn_blk_to_imgb[U_C] = oapv_blk_to_imgb_p21x_uv;
-        ctx->fn_blk_to_imgb[V_C] = oapv_blk_to_imgb_p21x_uv;
+        ctx->fn_blk_to_imgb[Y_C] = oapv_blk_to_pic_p21x_y;
+        ctx->fn_blk_to_imgb[U_C] = oapv_blk_to_pic_p21x_uv;
+        ctx->fn_blk_to_imgb[V_C] = oapv_blk_to_pic_p21x_uv;
     }
     else {
         for(int c = 0; c < ctx->num_c; c++) {
-            ctx->fn_blk_to_imgb[c] = oapv_blk_to_imgb_16;
+            ctx->fn_blk_to_imgb[c] = oapv_blk_to_pic_16;
         }
     }
 

@@ -242,7 +242,8 @@ extern "C" {
 #define OAPV_PROFILE_4444_10            (77)
 #define OAPV_PROFILE_4444_12            (88)
 #define OAPV_PROFILE_400_10             (99)
-#define OAPV_PROFILE_4444_16C12         (170)
+#define OAPV_PROFILE_444_16C12          (140)
+#define OAPV_PROFILE_4444_16C12         (144)
 
 
 /*****************************************************************************
@@ -409,6 +410,8 @@ typedef struct oapv_frm_info oapv_frm_info_t;
 struct oapv_frm_info {
     int           w;
     int           h;
+    // output frame's color space
+    // 16bit color space will be set if the profile is 444/4444-16C12
     int           cs;
     int           pbu_type;
     int           group_id;

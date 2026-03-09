@@ -100,7 +100,7 @@ void oapv_blk_from_imgb(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int
     }
 }
 
-void oapv_blk_from_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_from_pic_16(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
 {
     const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)src;
@@ -129,7 +129,7 @@ void oapv_blk_from_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offse
     }
 }
 
-void oapv_blk_from_imgb_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_from_pic_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
 {
     const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)src;
@@ -145,7 +145,7 @@ void oapv_blk_from_imgb_p21x_y(void *src, int blk_w, int blk_h, int s_src, int o
     }
 }
 
-void oapv_blk_from_imgb_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_from_pic_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int offset_src, int s_dst, void *dst, int bd, int comp)
 {
     const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)src + offset_src;
@@ -161,7 +161,7 @@ void oapv_blk_from_imgb_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int 
     }
 }
 
-void oapv_blk_from_imgb_p21x(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd, int comp)
+void oapv_blk_from_pic_p21x(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *block, int bd, int comp)
 {
     u16 *src, *dst;
     int  sft_hor, sft_ver, s_src;
@@ -193,7 +193,7 @@ void oapv_blk_from_imgb_p21x(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l
     }
 }
 
-void oapv_blk_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_to_pic_16(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd, int comp)
 {
     const int max_val = (1 << bd) - 1;
     const int mid_val = (1 << (bd - 1));
@@ -222,7 +222,7 @@ void oapv_blk_to_imgb_16(void *src, int blk_w, int blk_h, int s_src, int offset_
     }
 }
 
-void oapv_blk_to_imgb_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_to_pic_p21x_y(void *src, int blk_w, int blk_h, int s_src, int offset_dst, int s_dst, void *dst, int bd, int comp)
 {
     const int max_val = (1 << bd) - 1;
     const int mid_val = (1 << (bd - 1));
@@ -239,7 +239,7 @@ void oapv_blk_to_imgb_p21x_y(void *src, int blk_w, int blk_h, int s_src, int off
     }
 }
 
-void oapv_blk_to_imgb_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int x_pel, int s_dst, void *dst, int bd, int comp)
+void oapv_blk_to_pic_p21x_uv(void *src, int blk_w, int blk_h, int s_src, int x_pel, int s_dst, void *dst, int bd, int comp)
 {
     const int max_val = (1 << bd) - 1;
     const int mid_val = (1 << (bd - 1));
