@@ -631,7 +631,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
             for(j = y; j < (y + mb_h); j += OAPV_BLK_H) {
                 for(i = x; i < (x + mb_w); i += OAPV_BLK_W) {
                     pic = (s16 *)((u8 *)org + j * org_s) + i;
-                    ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, i, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, 1, ctx->use_companding);
+                    ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, i, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, (1 << (ctx->bit_depth - 1)) , ctx->use_companding);
 
                     ctx->fn_enc_blk(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);
                     oapve_vlc_dc_coef(bs, core->dc_diff, &core->kparam_dc[c]);

@@ -73,9 +73,8 @@
     ((p12) < 3584)? 16384 + (((p12) - 3072) << 5) : \
     /*((p12) < 4096)?*/ 32768 + (((p12) - 3584) << 6))
 
-void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int sub_mid, int comp)
+void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp)
 {
-    const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)pic;
     s16      *d = (s16 *)blk;
 
@@ -83,18 +82,9 @@ void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *b
         u16 p12;
 
         for(int j = 0; j < h; j++) {
-            if (sub_mid) {
-                for (int i = 0; i < w; i++) {
-                    p12 = OAPV_COMP_16C12(s[i]);
-                    d[i] = p12 - mid_val;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < w; i++) {
-                    p12 = OAPV_COMP_16C12(s[i]);
-                    d[i] = p12;
-                }
+            for (int i = 0; i < w; i++) {
+                p12 = OAPV_COMP_16C12(s[i]);
+                d[i] = p12 - mid_val;
             }
             s = (u16 *)(((u8 *)s) + pic_s);
             d = (s16 *)(((u8 *)d) + blk_s);
@@ -102,65 +92,40 @@ void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *b
     }
     else {
         for(int j = 0; j < h; j++) {
-            if (sub_mid) {
                 for (int i = 0; i < w; i++) {
                     d[i] = s[i] - mid_val;
                 }
-            }
-            else
-            {
-                for (int i = 0; i < w; i++) {
-                    d[i] = s[i];
-                }
-            }
+
             s = (u16 *)(((u8 *)s) + pic_s);
             d = (s16 *)(((u8 *)d) + blk_s);
         }
     }
 }
 
-void oapv_blk_from_pic_p21x_y(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int sub_mid, int comp)
+void oapv_blk_from_pic_p21x_y(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp)
 {
-    const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)pic;
     s16      *d = (s16 *)blk;
     int       shift_pic_bits = 16 - bd;
 
     for(int j = 0; j < h; j++) {
-        if (sub_mid) {
-            for (int i = 0; i < w; i++) {
-                d[i] = (s16)(s[i] >> shift_pic_bits) - mid_val;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < w; i++) {
-                d[i] = (s16)(s[i] >> shift_pic_bits);
-            }
+        for (int i = 0; i < w; i++) {
+            d[i] = (s16)(s[i] >> shift_pic_bits) - mid_val;
         }
         s = (u16 *)(((u8 *)s) + pic_s);
         d = (s16 *)(((u8 *)d) + blk_s);
     }
 }
 
-void oapv_blk_from_pic_p21x_uv(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int sub_mid, int comp)
+void oapv_blk_from_pic_p21x_uv(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp)
 {
-    const int mid_val = (1 << (bd - 1));
     u16      *s = (u16 *)pic + pic_x;
     s16      *d = (s16 *)blk;
     int       shift_pic_bits = 16 - bd;
 
     for(int j = 0; j < h; j++) {
-        if (sub_mid) {
-            for (int i = 0; i < w; i++) {
-                d[i] = (s16)(s[i * 2] >> shift_pic_bits) - mid_val;
-            }
-        }
-        else
-        {
-            for (int i = 0; i < w; i++) {
-                d[i] = (s16)(s[i * 2] >> shift_pic_bits);
-            }
+        for (int i = 0; i < w; i++) {
+            d[i] = (s16)(s[i * 2] >> shift_pic_bits) - mid_val;
         }
         s = (u16 *)(((u8 *)s) + pic_s);
         d = (s16 *)(((u8 *)d) + blk_s);
