@@ -37,11 +37,13 @@
 void oapv_blk_from_imgb(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd, int comp);
 void oapv_blk_from_imgb_p21x(oapv_imgb_t *imgb, int c, int x_l, int y_l, int w_l, int h_l, s16 *blk, int bd, int comp);
 
-void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp);
-void oapv_blk_from_pic_p21x_y(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp);
-void oapv_blk_from_pic_p21x_uv(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val, int comp);
-void oapv_blk_to_pic_16(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd, int comp);
-void oapv_blk_to_pic_p21x_y(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd, int comp);
-void oapv_blk_to_pic_p21x_uv(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd, int comp);
+void oapv_blk_from_pic_16(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val);
+void oapv_blk_from_pic_16C12(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val);
+void oapv_blk_from_pic_p21x_y(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val);
+void oapv_blk_from_pic_p21x_uv(int w, int h, void *pic, int pic_x, int pic_s, void *blk, int blk_s, int bd, int mid_val);
+void oapv_blk_to_pic_16(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd);
+void oapv_blk_to_pic_12E16(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd);
+void oapv_blk_to_pic_p21x_y(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd);
+void oapv_blk_to_pic_p21x_uv(int w, int h, void *blk, int blk_s, void *pic, int pic_x, int pic_s, int bd);
 
 #endif /* __OAPV_BLK_H_3243243920473824893204832876483924637286__ */
