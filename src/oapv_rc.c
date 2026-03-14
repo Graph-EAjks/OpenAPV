@@ -59,7 +59,7 @@ int oapve_rc_get_tile_cost(oapve_ctx_t* ctx, oapve_core_t* core, oapve_tile_t* t
                 int tx = tile->x + x;
                 int ty = tile->y + y;
                 pic = (s16*)((u8*)org + ty * org_s) + tx;
-                ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, 0, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, 0, ctx->use_companding);
+                ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, 0, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, 0);
                 sum += ctx->fn_had8x8(core->coef, 8);
                 tile->rc.number_pixel += 64;
             }

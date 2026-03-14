@@ -631,7 +631,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
             for(j = y; j < (y + mb_h); j += OAPV_BLK_H) {
                 for(i = x; i < (x + mb_w); i += OAPV_BLK_W) {
                     pic = (s16 *)((u8 *)org + j * org_s) + i;
-                    ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, i, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, (1 << (ctx->bit_depth - 1)) , ctx->use_companding);
+                    ctx->fn_blk_from_pic[c](OAPV_BLK_W, OAPV_BLK_H, pic, i, org_s, core->coef, (OAPV_BLK_W << 1), ctx->bit_depth, (1 << (ctx->bit_depth - 1)));
 
                     ctx->fn_enc_blk(ctx, core, OAPV_LOG2_BLK_W, OAPV_LOG2_BLK_H, c);
                     oapve_vlc_dc_coef(bs, core->dc_diff, &core->kparam_dc[c]);
@@ -640,7 +640,7 @@ static int enc_tile_comp(oapv_bs_t *bs, oapve_tile_t *tile, oapve_ctx_t *ctx, oa
 
                     if(rec != NULL) {
                         rec_t = (s16 *)((u8 *)rec + j * rec_s) + i;
-                        ctx->fn_blk_to_pic[c](OAPV_BLK_W, OAPV_BLK_H, core->coef_rec, (OAPV_BLK_W << 1), rec_t, i, rec_s, ctx->bit_depth, ctx->use_companding);
+                        ctx->fn_blk_to_pic[c](OAPV_BLK_W, OAPV_BLK_H, core->coef_rec, (OAPV_BLK_W << 1), rec_t, i, rec_s, ctx->bit_depth);
                     }
                 }
             }
@@ -905,9 +905,17 @@ static int enc_frm_prepare(oapve_ctx_t *ctx, oapve_param_t *param, oapv_imgb_t *
         ctx->fn_imgb_pad = imgb_pad_p210;
     }
     else {
-        for(int i = 0; i < ctx->num_c; i++) {
-            ctx->fn_blk_from_pic[i] = oapv_blk_from_pic_16;
-            ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_16;
+        if(ctx->use_companding){
+            for(int i = 0; i < ctx->num_c; i++) {
+                ctx->fn_blk_from_pic[i] = oapv_blk_from_pic_16C12;
+                ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_12E16;
+            }
+        }
+        else{
+            for(int i = 0; i < ctx->num_c; i++) {
+                ctx->fn_blk_from_pic[i] = oapv_blk_from_pic_16;
+                ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_16;
+            }
         }
         ctx->fn_imgb_pad = imgb_pad;
     }
@@ -1422,8 +1430,15 @@ static int dec_frm_prepare(oapvd_ctx_t *ctx, oapv_imgb_t *imgb)
         ctx->fn_blk_to_pic[V_C] = oapv_blk_to_pic_p21x_uv;
     }
     else {
-        for(int c = 0; c < ctx->num_c; c++) {
-            ctx->fn_blk_to_pic[c] = oapv_blk_to_pic_16;
+        if(ctx->disable_companding){
+            for(int i = 0; i < ctx->num_c; i++) {
+                ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_16;
+            }
+        }
+        else{
+            for(int i = 0; i < ctx->num_c; i++) {
+                ctx->fn_blk_to_pic[i] = oapv_blk_to_pic_12E16;
+            }
         }
     }
 
@@ -1459,7 +1474,7 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
 {
     int  mb_h, mb_w, y, x, j, i;
     int  le, ri, to, bo;
-    int  ret, comp;
+    int  ret;
     s16 *pic_t;
 
     mb_h = OAPV_MB_H >> ctx->c_sft[c][1];
@@ -1491,9 +1506,8 @@ static int dec_tile_comp(oapvd_tile_t *tile, oapvd_ctx_t *ctx, oapvd_core_t *cor
                     oapv_assert_rv(OAPV_SUCCEEDED(ret), ret);
 
                     // copy decoded block to image buffer
-                    comp = (ctx->disable_companding)? 0: ctx->fh.fi.use_companding;
                     pic_t = (s16 *)((u8 *)pic + j * pic_s) + i;
-                    ctx->fn_blk_to_pic[c](OAPV_BLK_W, OAPV_BLK_H, core->coef, (OAPV_BLK_W << 1), pic_t, i, pic_s, ctx->bit_depth, comp);
+                    ctx->fn_blk_to_pic[c](OAPV_BLK_W, OAPV_BLK_H, core->coef, (OAPV_BLK_W << 1), pic_t, i, pic_s, ctx->bit_depth);
                 }
             }
         }
